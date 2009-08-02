@@ -789,9 +789,13 @@ class User(object):
     def isValidCookieDough(self, cookiestring):
         stored_secret = False
         split_string = cookiestring.split(',')
-        userid = split_string[0].strip()
-        sessionid = split_string[1].strip()
-        secret = split_string[2]
+	try:
+        	userid = split_string[0].strip()
+        	sessionid = split_string[1].strip()
+        	secret = split_string[2]
+	except IndexError:
+		# seems to happen when sessions get bunged
+		return False
         if config.memcache:
             key = "userSessions:%s,%s" % (userid, sessionid)
             obj = self.request.mc.get(key, wiki_global=True)
