@@ -209,6 +209,7 @@ _cfg_defaults_global = {
     'allow_xslt': 0,
     'auth_http_enabled': 0,
     'bang_meta': 0,
+    'block_tor_edits': 0,
     'caching_formats' : ['text_html'],
     'captcha_support': 1,
     'changed_time_fmt': '%H:%M',
@@ -375,6 +376,7 @@ _cfg_defaults_local = {
     'allowed_mimetypes': [],
     # set to True to allow any extension / mimetype of uploaded files
     'allow_all_mimetypes': False, 
+    'block_tor_edits': False,
     'catchphrase': 'Your phrase here...',
     'theme_files_last_modified': {},
     'edit_agreement_text': '',

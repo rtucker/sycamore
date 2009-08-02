@@ -12,6 +12,7 @@ import os
 import time
 import urllib
 import string
+import torcheck
 import xml.dom.minidom
 
 import Sycamore.util.web
@@ -121,6 +122,11 @@ class PageEditor(Page):
             # Trying to edit an old version, this is not possible via
             # the web interface, but catch it just in case...
             msg = _('Cannot edit old revisions!')
+
+	# Is the IP address a Tor exit note?
+	if config.block_tor_edits:
+		tor = torcheck.torcheck()
+		if tor.query(self.request.remote_addr): _('You are not allowed to edit this page, %s.' % self.request.remote_addr)
 
         # Did one of the prechecks fail?
         if msg and not kw.get('had_conflict', None):
