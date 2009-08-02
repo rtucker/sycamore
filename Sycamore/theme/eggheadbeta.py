@@ -96,8 +96,8 @@ class Theme(ThemeBase):
         return ''.join(html)
 
     def new_iconbar(self, d):
-        return "%s\n%s\n%s\n%s" % (self.editicon(d), self.infoicon(d),
-                                   self.talkicon(d), self.mapicon(d))
+        return "%s\n%s\n%s\n%s\n%s" % (self.editicon(d), self.infoicon(d),
+                                       self.talkicon(d), self.mapicon(d), self.shareicon(d))
 
     def get_editable_icon(self, filename, name):
         if has_file(self.request, self.images_pagename, filename):
@@ -165,6 +165,19 @@ class Theme(ThemeBase):
                                            '?action=info',
                                        icon, script_name=d['script_name']))
             
+    def shareicon(self, d):
+	if self.isInfo() or d['page'].isTalkPage() or self.isEdit():
+	    return ''
+	else:
+	    return """
+		<td class="pageIcon">
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		</td>
+		<td class="pageIcon">
+			<script type="text/javascript" src="http://w.sharethis.com/widget/?tabs=web%2Cpost%2Cemail&amp;charset=utf-8&amp;style=default&amp;publisher=48fdea67-5380-4f3d-8a48-d79101f7670a&amp;headerbg=%23E0E0FF"></script>
+		</td>
+	    """
+
     def talkicon(self, d):
         if not self.request.config.talk_pages:
             return ''

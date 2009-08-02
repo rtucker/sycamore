@@ -44,7 +44,7 @@ f2e = {'PNG': ['.png'], 'JPEG': ['.jpg', '.jpeg'], 'GIF': ['.gif']}
 EDITABLE_ICONS = [
     ('tinylogo.png', (16,16)), 'logo.png', 'logo_background.png',
     'editicon.png', 'infoicon.png', 'talkicon.png', 'articleicon.png',
-    'viewmapicon.png', 'hidemapicon.png']
+    'viewmapicon.png', 'hidemapicon.png', 'share.png']
 
 EDITABLE_CSS = ['style.css', 'layout.css', 'common.css']
 
