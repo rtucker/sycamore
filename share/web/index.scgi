@@ -38,7 +38,8 @@ def run_as_daemon():
       do_run()
 
 def do_run():
-    WSGIServer(basic_handle_request, scriptName='/index.scgi', bindAddress=bindAddress, loggingLevel=NOTSET).run()
+    #Added maxChildren=10 to override default maxChildren=50 on Preforkserver; may or may not work.  -rtucker 2008/07/23
+    WSGIServer(basic_handle_request, scriptName='', bindAddress=bindAddress, loggingLevel=NOTSET, maxSpare=3, maxChildren=5).run()
 
 if __name__ == '__main__':
     try:
