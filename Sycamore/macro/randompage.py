@@ -5,6 +5,9 @@
     @copyright: 2007 by Philip Neustrom <philipn@gmail.com>
     @copyright: 2000 by Jürgen Hermann <jh@web.de>
     @license: GNU GPL, see COPYING for details.
+
+edited 2008/07/11 by rtucker - filtering out redirects and user pages
+
 """
 
 # Imports
@@ -31,8 +34,9 @@ def execute(macro, args, formatter):
     while len(pages) < links and random_list:
         pagename = random.choice(random_list)
         page = Page(pagename, macro.request)
-        if macro.request.user.may.read(page) and page.exists():
-            pages.append(page)
+        if macro.request.user.may.read(page) and page.exists() and not page.isRedirect():
+		if page.proper_name()[0:6] != 'Users/' and page.proper_name()[-5:] != '/Talk':
+	            pages.append(page)
 
     # return a single page link
     if links == 1:
