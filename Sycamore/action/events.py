@@ -34,7 +34,7 @@ def execute(pagename, request):
     # Do we want an RSS feed?
     if (request.form.has_key('rss') and request.form.get("rss")[0] == '1' and
         request.user.may.read(events_page)):
-        request.http_headers()
+        request.http_headers(more_headers=[('Content-type', 'application/rss+xml')]) # added content-type header so the right mimetype goes out 2008/05/12 rtucker
         request.write(doRSS(request))
         raise util.SycamoreNoFooter
         return
@@ -173,7 +173,7 @@ def doRSS(request):
     today_struct = time.gmtime(timenow+request.config.tz_offset)
     today = list(today_struct[0:3]) + [0,0,0,0,0,0]
     today = calendar.timegm(today) - request.config.tz_offset
-    tomorrow_struct = time.gmtime(timenow+60*60*24+request.config.tz_offset)
+    tomorrow_struct = time.gmtime(timenow+60*60*24*7+request.config.tz_offset) # added *7 to show an entire week 2008/05/12 rtucker
     tomorrow = list(tomorrow_struct[0:3]) + [0,0,0,0,0,0]
     tomorrow = calendar.timegm(tomorrow) - request.config.tz_offset
 
