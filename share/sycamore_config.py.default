@@ -170,3 +170,12 @@ paypal_name = 'Wiki Spot'
 # LISH username here to enable the [[linodestats]] macro.
 linode_username = 'linode12345'
 
+# Things to append to the search string for the Twitter search macro.
+# Note: the "near" tag doesn't work here, so you have to use:
+# geocode:latitude,longitude,radius (with either "km" or "mi" appended)
+twitter_params = 'geocode:43.17,-77.61,50mi'
+# maximum results to return on a Twitter search (default: 3)
+#twitter_maxlines = 3
+# maximum age of a Twitter result in seconds (default: 3 days)
+#twitter_maxtime = 3*24*60*60
+

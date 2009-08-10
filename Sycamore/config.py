@@ -309,6 +309,9 @@ _cfg_defaults_global = {
     'trail_size': 5,
     # use X_FORWARDED_FOR for request.remote_addr if provided.
     'trust_x_forwarded_for': False, 
+    'twitter_maxtime': 3*24*60*60,
+    'twitter_maxlines': 3,
+    'twitter_params': '',
     # a regex of HTTP_USER_AGENTS that should be excluded from logging,
     # and receive a FORBIDDEN for anything except viewing a page
     'ua_spiders': ('archiver|crawler|google|htdig|httrack|jeeves|larbin|'
