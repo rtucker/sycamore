@@ -179,3 +179,9 @@ twitter_params = 'geocode:43.17,-77.61,50mi'
 # maximum age of a Twitter result in seconds (default: 3 days)
 #twitter_maxtime = 3*24*60*60
 
+# Flickr support.  Requires that share/web/wiki/cgi/flickrimage.py be
+# executable as a CGI (and that cgiurl be pointed there), and that
+# a flickr API_KEY and API_SECRET (available from flickr.com) be set.
+flickr_cgiurl = 'http://rocwiki.org/wiki/cgi/flickrimage.py'
+flickr_apikey = '12345'
+flickr_apisecret = '67890'
