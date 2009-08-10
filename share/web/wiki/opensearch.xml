@@ -1,0 +1,9 @@
+<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/"
+                       xmlns:moz="http://www.mozilla.org/2006/browser/search/">
+<ShortName>RocWiki</ShortName>
+<Description>Rochester Wiki - The People's Guide to Rochester, New York</Description>
+<Image height="16" width="16" type="image/x-icon">http://rocwiki.org/favicon.ico</Image>
+<Url type="text/html" method="get" template="http://rocwiki.org/Front_Page?action=search&amp;inline_string={searchTerms}" />
+<Url type="application/x-suggestions+json" method="get" template="http://rocwiki.org/wiki/cgi/opensearch-suggest.py?query={searchTerms}" />
+</OpenSearchDescription>
+

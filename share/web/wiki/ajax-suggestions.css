@@ -1,0 +1,36 @@
+/* Search result suggestions */
+#search-result-suggestions{
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 300px;
+	background: #FFF;
+	border: 1px solid #484256;
+	display: none;
+}
+
+#search-result-suggestions h4{
+	margin: 0.25em 0;
+	padding: 0.25em 1em;
+}
+
+#search-results ul{
+	list-style: none;
+	margin-bottom: 1em;
+}
+
+#search-results a{
+	display: block;
+	margin-left: 0.1 0;
+	padding: 0.20em 0;
+	text-decoration: none;
+}
+
+#search-results a.selected{
+	color: #FFF;
+	background: #484256;
+}
+
+#search-results p{
+	margin-bottom: 0.5em;
+}
