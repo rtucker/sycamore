@@ -78,14 +78,20 @@ def execute(macro, args, formatter=None, test=None):
     response_dict = mc.get("twitter-18-" + urllib.quote(query))
     if not response_dict:
         fromcache = 'no'
-        response_dict = simplejson.loads(urllib.urlopen('http://search.twitter.com/search.json?q=%s&rpp=%i' % (quotedquery, config.twitter_maxlines)).read())
-        mc.set("twitter-18-" + urllib.quote(query), response_dict, time=3600)
+        try:
+            response_dict = simplejson.loads(urllib.urlopen('http://search.twitter.com/search.json?q=%s&rpp=%i' % (quotedquery, config.twitter_maxlines)).read())
+            mc.set("twitter-18-" + urllib.quote(query), response_dict, time=3600)
+        except IOError:
+            response_dict = None
 
     display_list = ["||<bgcolor='#E0E0FF'>'''Local Twitter search results for [http://search.twitter.com/search?q=%s %s]'''||" % (quotedquery, nicequery)]
 
     outputting = False
 
-    if len(response_dict['results']) > 0:
+    if not response_dict:
+        outputting = True
+        display_list.append("||An error occurred during processing...||")
+    elif len(response_dict['results']) > 0:
         for i in response_dict['results']:
             name = i['from_user']
             text = wikiutil.simpleStrip(macro.request, i['text']).replace('&amp;','&').replace('\n',' ')
