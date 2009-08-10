@@ -165,3 +165,8 @@ use_tls = False
 
 paypal_address = 'daviswiki@gmail.com'
 paypal_name = 'Wiki Spot'
+
+# If you are running on a Linode VPS (http://www.linode.com/), enter your
+# LISH username here to enable the [[linodestats]] macro.
+linode_username = 'linode12345'
+

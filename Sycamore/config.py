@@ -244,6 +244,7 @@ _cfg_defaults_global = {
     'httpd_host': 'localhost',
     'httpd_port': 8080,
     'httpd_user': None,
+    'linode_username': None,
     # XXX UNICODE fix
     'lowerletters': ('0-9a-z\xe0\xe1\xe2\xe3\xe4\xe5\xe6\xe8\xe9\xea\xeb\xec'
                      '\xed\xee\xef\xf2\xf3\xf4\xf5\xf6'
