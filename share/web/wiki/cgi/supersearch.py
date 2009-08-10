@@ -37,8 +37,30 @@ def timeago(timestamp):
         return '%i months ago' % int(hoursago/24/30)
 
 # runquery: runs a query against the db
-def runquery(cur, query, limit=maxresults):
-    cur.execute("SELECT propercased_name,edittime FROM curpages WHERE text ilike %(query)s ORDER BY edittime LIMIT %(limit)s", dict(query='%%' + query + '%%', limit=limit))
+def runquery(cur, query, limit=maxresults, protection=True):
+    if protection:
+        cur.execute("""
+            SELECT propercased_name,edittime
+            FROM curpages
+            LEFT JOIN
+              (SELECT pagename, may_read AS has_read_priv
+               FROM pageacls
+               WHERE groupname IN ('All')
+              ) AS access
+            ON (access.pagename = curpages.name)
+            WHERE curpages.text ilike %(query)s
+            AND (has_read_priv IS NULL OR has_read_priv)
+            ORDER BY edittime
+            LIMIT %(limit)s""",
+            dict(query='%%' + query + '%%', limit=limit))
+    else:
+        cur.execute("""
+            SELECT propercased_name,edittime
+            FROM curpages
+            WHERE text ilike %(query)s
+            ORDER BY edittime
+            LIMIT %(limit)s""",
+            dict(query='%%' + query + '%%', limit=limit))
     return cur.fetchall()
 
 # Open a database cursor
