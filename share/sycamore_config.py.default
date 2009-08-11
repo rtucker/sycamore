@@ -72,10 +72,6 @@ license_text = """<!-- Creative Commons License -->Except where otherwise noted,
 # This will be shown under "save changes" in the wiki editor.  If you're going to use a license then it's good to have a small snippet of text that they see when saving.
 edit_agreement_text = """By clicking "Save Changes" you are agreeing to release your contribution under the <a href="http://creativecommons.org/licenses/by/3.0/">Creative Commons-By license</a>, unless noted otherwise. <b>Do not submit copyrighted work (including images) without permission.</b>  For more information, see <a href="/Copyrights">Copyrights</a>."""
 
-
-# These are the buttons that appear to the right in the footer.
-footer_buttons = ["""<a href="http://creativecommons.org/licenses/by/3.0/"><img alt="Creative Commons License" border="0" src="/wiki/eggheadbeta/img/cc.png" /></a>""", """<a href="http://wikispot.org/Donate"><img src="/wiki/eggheadbeta/img/donate.png" border="0" alt="donate"/></a>"""]
-
 # tabs at the top of the browser for people who aren't logged in
 tabs_nonuser = ['Front Page', 'People', 'Recent Changes']
 # tabs at teh top of the browser for people who are logged in

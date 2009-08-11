@@ -145,27 +145,19 @@ class SiteSettingsHandler(object):
                 self.request.config.tabs_user = fixed_tabs_user
             
             footer_buttons = []
-            if (form.has_key('footer_button_1') and
-                form['footer_button_1'][0].replace('\t', '').strip()):
-                footer_button_1 = form['footer_button_1'][0]
-                if len(footer_button_1) > SANE_TEXT_UPPER_LIMIT:
-                    return _("Too much text in your footer button 1"
-                             "..enter less!")
-                footer_buttons.append(wikiutil.sanitize_html(footer_button_1))
-            if (form.has_key('footer_button_2') and
-                form['footer_button_2'][0].replace('\t', '').strip()):
-                footer_button_2 = form['footer_button_2'][0]
-                if len(footer_button_2) > SANE_TEXT_UPPER_LIMIT:
-                    return _("Too much text in your footer button 2"
-                             "..enter less!")
-                footer_buttons.append(wikiutil.sanitize_html(footer_button_2))
-            if (form.has_key('footer_button_3') and
-                form['footer_button_3'][0].replace('\t', '').strip()):
-                footer_button_3 = form['footer_button_3'][0]
-                if len(footer_button_3) > SANE_TEXT_UPPER_LIMIT:
-                    return _("Too much text in your footer button 3"
-                             "..enter less!")
-                footer_buttons.append(wikiutil.sanitize_html(footer_button_3))
+            for num in range(1,4):
+                formkey = 'footer_button_%i' % num
+                if (form.has_key(formkey) and
+                    form[formkey][0].replace('\t', '').strip()):
+                    butttext = form[formkey][0]
+                    if len(butttext) > SANE_TEXT_UPPER_LIMIT:
+                        return _("Too much text in your footer button %i" % num,
+                                 "..enter less!")
+                    if form.has_key('footer_sanitize_%i' % num):
+                        footer_buttons.append(wikiutil.sanitize_html(butttext))
+                    else:
+                        footer_buttons.append('<!-- NOSANITIZE -->' + butttext)
+
             self.request.config.footer_buttons = footer_buttons
             if form.has_key('tz'):
                 tz = form['tz'][0]
@@ -503,30 +495,26 @@ class GeneralSettings:
             ], option_text=_("(HTML ok)"))
 
             footer_buttons = self.request.config.footer_buttons
-            footer_button_1 = ''
-            footer_button_2 = ''
-            footer_button_3 = ''
-            if len(footer_buttons) > 0:
-                footer_button_1 = footer_buttons[0]
-                if len(footer_buttons) > 1:
-                    footer_button_2 = footer_buttons[1]
-                    if len(footer_buttons) > 2:
-                        footer_button_3 = footer_buttons[2]
 
-            self.make_row(_("Footer button 1"), [
-              html.TEXTAREA(name="footer_button_1", rows="5",
-                            cols="60").append(footer_button_1)
-            ], option_text=_("(HTML ok)"))
-
-            self.make_row(_("Footer button 2"), [
-              html.TEXTAREA(name="footer_button_2", rows="5",
-                            cols="60").append(footer_button_2)
-            ], option_text=_("(HTML ok)"))
-
-            self.make_row(_("Footer button 3"), [
-              html.TEXTAREA(name="footer_button_3", rows="5",
-                            cols="60").append(footer_button_3)
-            ], option_text=_("(HTML ok)"))
+            for num in range(0,3):
+                try:
+                    butttext = footer_buttons[num]
+                except IndexError:
+                    butttext = ''
+                buttid = num + 1
+                if butttext.startswith('<!-- NOSANITIZE -->'):
+                    sanitize = 0
+                else:
+                    sanitize = 1
+                self.make_row(_("Footer button %i" % buttid), [
+                    html.TEXTAREA(name="footer_button_%i" % buttid,
+                                 rows="5", cols="60").append(butttext)],
+                              option_text=_(" (HTML ok)"))
+                self.make_row(_("Sanitize button %i?" % buttid), [
+                    html.INPUT(type="checkbox",
+                               name="footer_sanitize_%i" % buttid,
+                               value=1,
+                               checked=sanitize)])
 
             self.make_row(_("Default time zone"), [self._tz_select()])
 
