@@ -761,8 +761,8 @@ class Theme(ThemeBase):
         @return: page footer html
         """
 
-        return '%s<div class="wikiGlobalFooter" align="center">%s</div>' % (
-            self.edittext_link(d, **keywords), config.page_footer1)
+        return '%s<div class="wikiGlobalFooter" align="center">%s</div>%s' % (
+            self.edittext_link(d, **keywords), config.page_footer1, config.stat_tracker_code )
 
         
 def execute(request):
