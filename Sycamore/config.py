@@ -306,6 +306,7 @@ _cfg_defaults_global = {
     'show_timings': 0,
     'show_version': 0,
     'sox_location': '/usr/local/bin/sox',
+    'stat_tracker_code': '',
     'stop_hotlinking': True,
     'tmp_dir': 'tmp',
     'theme_force': True,
