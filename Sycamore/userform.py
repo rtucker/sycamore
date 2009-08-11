@@ -860,8 +860,7 @@ class UserSettings:
             if not new_user:
                 user_name_help_text = ''
             else:
-                user_name_help_text = _('(Please do not use nickname or '
-                                        'business name.)')
+                user_name_help_text = ' ' + config.user_name_help_text
             self.make_row(_('Name'), [html.INPUT(type="text", size=32,
                                                  name="username",
                                                  value=self.request.user.name)

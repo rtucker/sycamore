@@ -330,6 +330,7 @@ _cfg_defaults_global = {
     'url_prefix': '/wiki',
     'url_schemas': [],
     'url_mappings': {},
+    'user_name_help_text': '(Please do not use nickname or business name.)',
     'user_page_prefix': 'Users/',
     'use_ssl': False,
     'use_tls': False,
