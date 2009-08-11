@@ -1419,6 +1419,8 @@ def send_title(request, text, **keywords):
     else:
         user_head.append('<meta name="robots" content="index,follow">\n')
 
+    user_head.append('<link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="%s" />' % config.interwikiname)
+
     # do we show an icon for the wiki?
     tiny_logo_url = None
     image_pagename = '%s/%s' % (config.wiki_settings_page,
