@@ -1,2 +1,11 @@
 User-agent: *
-Disallow:
+Disallow: /Wiki_Settings/
+Disallow: /Wanted_Pages
+Disallow: /wiki/
+Disallow: /stats/
+Allow: /*?action=show
+Allow: /*?action=rss_rc
+Allow: /*?action=Files
+Disallow: /*?action=
+Allow: /
+
