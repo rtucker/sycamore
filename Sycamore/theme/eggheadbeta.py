@@ -730,20 +730,31 @@ class Theme(ThemeBase):
         @return: search form html
         """
         _ = self.request.getText
-        dict = {
-		    'search_title': _("Search"),
-		    'search_html': _("""Search: <input class="/wiki/cgi/opensearch-suggest.py" type="text" name="inline_string" value="" size="15" maxlength="95">&nbsp;<input type="image" src="http://%s/wiki/%s/img/search.png" alt="[?]">&nbsp;&nbsp;""" % (config.wiki_base_domain, config.theme_default)),
-	    }
+        if config.opensearch_suggest_url:
+            dict = {
+                'search_title': _("Search"),
+                'search_html': _("""Search: <input class="%s" type="text" name="inline_string" value="" size="15" maxlength="95">&nbsp;<input type="image" src="http://%s/wiki/%s/img/search.png" alt="[?]">&nbsp;&nbsp;""" % (config.opensearch_suggest_url, config.wiki_base_domain, config.theme_default)),
+                }
+        else:
+            dict = {
+                'search_title': _("Search"),
+                'search_html': _("Search: %(textsearch)s&nbsp;&nbsp;") % d,
+                }
         if wiki_global:
             dict['search_action'] = 'global_search'
         else:
             dict['search_action'] = 'search'
         dict.update(d)
-        
-        html = (
-	        '<script type="text/javascript" src="/wiki/ajaxSuggestions.js"></script>\n'
-            '<style type="text/css">@import url("/wiki/ajax-suggestions.css");</style>\n'
-            '<div id="search-result-suggestions"><div id="search-results"></div></div>\n'
+
+        if config.opensearch_suggest_url:
+            html = (
+                '<script type="text/javascript" src="/wiki/ajaxSuggestions.js"></script>\n'
+                '<style type="text/css">@import url("/wiki/ajax-suggestions.css");</style>\n'
+                '<div id="search-result-suggestions"><div id="search-results"></div></div>\n')
+        else:
+            html = ''
+
+        html += (
             '<form method="GET" action="%(script_name)s/%(q_page_name)s">\n'
             '<input type="hidden" name="action" value="%(search_action)s">\n'
             '%(search_html)s\n'

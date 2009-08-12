@@ -262,6 +262,7 @@ _cfg_defaults_global = {
     'memcache': False,
     'memcache_servers': [],
     'nonexist_qm': 0,
+    'opensearch_suggest_url': None,
 
     'page_credits': ('<a href="http://projectsycamore.org">'
                      'Sycamore Powered</a><br>'),

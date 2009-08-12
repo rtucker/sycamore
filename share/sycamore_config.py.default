@@ -190,3 +190,7 @@ flickr_apisecret = '67890'
 # new user page
 #user_name_help_text = '(Please do not use nickname or business name.)'
 
+# opensearch_suggest_url: URL where I'd find opensearch-suggest.py if
+# opensearch and search suggestions are enabled.
+#opensearch_suggest_url = '/wiki/cgi/opensearch-suggest.py'
+
