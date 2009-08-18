@@ -140,7 +140,7 @@ if __name__ == "__main__":
            "about goodness).")
     print "  7) Clear all page caches."
     print "-------------------------------------"
-    print "         Enter 1-3 to continue"
+    print "         Enter 1-7 to continue"
 
     choice = raw_input()
     if choice[0] == '1':
