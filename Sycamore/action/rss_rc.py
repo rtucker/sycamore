@@ -13,6 +13,7 @@
 # Imports
 import xml.dom.minidom
 import urllib
+import time
 
 from Sycamore import config
 from Sycamore import wikiutil
@@ -167,7 +168,7 @@ def execute(pagename, request):
         item.appendChild(item_link)
         item_date = rss_dom.createElement("dc:date")
         item_date.appendChild(rss_dom.createTextNode(
-            request.user.getFormattedDateTime(line.ed_time, global_time=True)))
+            time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(line.ed_time))))
         item.appendChild(item_date)
         creator = rss_dom.createElement("dc:creator")
         creator.appendChild(rss_dom.createTextNode(
