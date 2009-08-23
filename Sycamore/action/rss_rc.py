@@ -136,9 +136,13 @@ def execute(pagename, request):
         line.comment = Comment(request, line.comment, line.action,
                                page=page).render()
         item = rss_dom.createElement("item")
-        item_guid = rss_dom.createElement("guid")
-        item_guid.appendChild(rss_dom.createTextNode("%s, %s" %
-            (line.ed_time, wikiutil.quoteWikiname(line.pagename))))
+        item_link = rss_dom.createElement("link")
+        if wiki_global:
+            permalink = farm.page_url(line.wiki_name, line.pagename, formatter)
+        else:
+            permalink = page.url(relative=False)
+        item_link.appendChild(rss_dom.createTextNode(permalink))
+        item.appendChild(item_link)
         item_description = rss_dom.createElement("description")
         if line.action in ['SAVE', 'SAVENEW', 'RENAME', 'COMMENT_MACRO',
                            'SAVE/REVERT', 'DELETE']:
@@ -151,21 +155,22 @@ def execute(pagename, request):
                 line.comment, do_diff(line.pagename, request,
                                       in_wiki_interface=False, text_mode=True,
                                       version1=version1, version2=version2))
+            guid = "%s?action=diff&version1=%i&version2=%i&ts=%i" % (
+                permalink, version1, version2, line.ed_time)
         else:
             description = line.comment
-
+            guid = "%s?action=recall&version=%i&ts=%i" % (
+                permalink,
+                Page(line.pagename, request,
+                    prev_date=line.ed_time).get_version(),
+                line.ed_time)
+        item_guid = rss_dom.createElement("guid")
+        item_guid.appendChild(rss_dom.createTextNode(guid))
+        item.appendChild(item_guid)
         item_description.appendChild(rss_dom.createTextNode(description))
         item_title = rss_dom.createElement("title")
         item_title.appendChild(rss_dom.createTextNode(line.pagename))
         item.appendChild(item_title)
-        item_link = rss_dom.createElement("link")
-        if wiki_global:
-            item_link.appendChild(rss_dom.createTextNode(
-                farm.page_url(line.wiki_name, line.pagename, formatter)))
-        else:
-            item_link.appendChild(rss_dom.createTextNode(
-                page.url(relative=False)))
-        item.appendChild(item_link)
         item_date = rss_dom.createElement("dc:date")
         item_date.appendChild(rss_dom.createTextNode(
             time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(line.ed_time))))
