@@ -477,5 +477,8 @@ class BaseSCGIServer(object):
         all errors should be caught at the application level.
         """
         import cgitb
-        request.stdout.write('Content-Type: text/html\r\n\r\n' +
-                             cgitb.html(sys.exc_info()))
+	tbinstance = cgitb.Hook(display=0, logdir='/tmp', format='text',
+				file=request.stdout)
+        request.stdout.write('Content-Type: text/html\r\n\r\n')
+        tbinstance.handle(sys.exc_info())
+	request.stdout.write('<p>Please e-mail the server admin, <a href="mailto:rtucker@gmail.com">rtucker@gmail.com</a>, with the information on this page and a brief description of what you were trying to do, and he will take a look at it.  Thanks!')
