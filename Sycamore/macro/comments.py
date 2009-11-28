@@ -65,6 +65,7 @@ def execute(macro, args, formatter=None):
             '</span>'
             '<input class="formbutton" type="submit" name="button_do_%(pghash)s" '
                     'value="Add Comment">\n'
+            '<i>Friendly reminder: Please read <a href="http://rocwiki.org/Wiki_Community/Etiquette" target="_blank">Wiki Community/Etiquette</a> before commenting.</i>'
             '<span style="position: absolute; top: 0px; left: 0px; height: 100px; width: 100px;'
                          'height: 0px!important; width: 0px!important; overflow: hidden;">'
             '<input class="formbutton" type="submit" name="button_dont4_%(pghash)s" '
