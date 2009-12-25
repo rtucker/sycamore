@@ -78,7 +78,11 @@ class Parser(SimpleParser):
             self.is_a_page = False
 
         self.formatter = formatter
-        self.hilite_re = ''
+
+        if self.formatter.page.hilite_re:
+            self.hilite_re = self.formatter.page.hilite_re
+        else:
+            self.hilite_re = ''
 
         # prepare regex patterns
         rules = self.formatting_rules.replace('\n', '|')
