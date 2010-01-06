@@ -1,3 +1,7 @@
 # Ignore some useless files
 *.pyc
 *.pyo
+
+# caches
+share/data/dict.cache
+share/web/wiki/dumps
