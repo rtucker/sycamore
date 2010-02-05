@@ -53,6 +53,6 @@ if __name__ == '__main__':
       else:
         do_run()
 
-    except:
+    except getopt.GetoptError:
       usage()
       sys.exit(2)

@@ -426,6 +426,8 @@ class PreforkServer(object):
             # Otherwise, there's activity on the main socket...
             try:
                 clientSock, addr = sock.accept()
+            except socket.timeout:
+                continue
             except socket.error, e:
                 if e[0] == errno.EAGAIN:
                     # Or maybe not.
