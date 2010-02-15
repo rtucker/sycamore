@@ -305,6 +305,9 @@ function createClickProperties(start)
 {
     if (!may_inline_edit)
         return false;
+    if (wikiLines.length > 300)
+        //there's too much to chew in one go. -rtucker 2010/02/15
+        return false;
     var i, j;
     for (i = start, j = 0; i < wikiLines.length && j < process_chunk_size; i++, j++)
     {

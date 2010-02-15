@@ -5,6 +5,7 @@
 """
 
 # Imports
+import os
 import string
 import urllib
 
@@ -25,7 +26,7 @@ class Theme(ThemeBase):
     """
 
     name = "eggheadbeta"
-    last_modified = '1190515399'
+    last_modified = int(os.stat(__file__).st_mtime)
     showmap = 0
 
     stylesheets_print = (
