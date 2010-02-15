@@ -730,7 +730,8 @@ class Theme(ThemeBase):
         @return: search form html
         """
         _ = self.request.getText
-        if config.opensearch_suggest_url:
+        #if config.opensearch_suggest_url:
+        if False:
             dict = {
                 'search_title': _("Search"),
                 'search_html': _("""Search: <input class="%s" type="text" name="inline_string" value="" size="15" maxlength="95">&nbsp;<input type="image" src="http://%s/wiki/%s/img/search.png" alt="[?]">&nbsp;&nbsp;""" % (config.opensearch_suggest_url, config.wiki_base_domain, config.theme_default)),
@@ -746,7 +747,8 @@ class Theme(ThemeBase):
             dict['search_action'] = 'search'
         dict.update(d)
 
-        if config.opensearch_suggest_url:
+        #if config.opensearch_suggest_url:
+        if False:
             html = (
                 '<script type="text/javascript" src="/wiki/ajaxSuggestions.js"></script>\n'
                 '<style type="text/css">@import url("/wiki/ajax-suggestions.css");</style>\n'
