@@ -20,8 +20,8 @@ import mimetypes
 import time
 import urllib
 import string
-import cStringIO
 import sha
+import tempfile
 import types
 import xml.dom.minidom
 
@@ -177,8 +177,14 @@ def openImage(filecontent):
     Return image size or throw exception if not an image.
     """
     from PIL import Image
-    import cStringIO
-    im = Image.open(cStringIO.StringIO(filecontent))
+    if type(filecontent) == str:
+        im_file = tempfile.TemporaryFile()
+        im_file.write(filecontent)
+        im_file.flush()
+    else:
+        im_file = filecontent
+    im_file.seek(0)
+    im = Image.open(im_file)
     return im
 
 def getAttachUrl(pagename, filename, request, addts=0, escaped=1, deleted=0,
@@ -823,7 +829,6 @@ def how_to_use(filename, is_image):
                 '</div>') % filename
 
 def do_upload(pagename, request):
-    import cStringIO
     from PIL import Image
     _ = request.getText
     msg = ''
@@ -879,6 +884,7 @@ def do_upload(pagename, request):
         for theme, charset, media, name in request.theme.stylesheets:
             if ('%s.css' % name).lower() == target.lower():
                 suspect_css = wikiutil.is_suspect_css(filecontent)
+                uploaded_file.seek(0)
                 if suspect_css:
                     error_msg(pagename, request,
                         _('File not saved because the CSS you uploaded has '
@@ -905,14 +911,6 @@ def do_upload(pagename, request):
             error_msg(pagename, request,
                       _('Your file ended with "%s" but doesn\'t seem to be an '
                         'image or I don\'t know know to process it!' % ext))
-            return
-
-        # this weeds out interlaced PNGs, which PIL can't currently process
-        try:
-            im.load()
-        except IOError, msg:
-            error_msg(pagename, request,
-                      _('There was an error with your image: ') + str(msg))
             return
 
         is_image = True
@@ -1413,10 +1411,13 @@ def getCaptionsHTML(attached_to_pagename, image_name, request):
             image_file = wikidb.getFile(request, {
                 'filename':image_name,
                 'page_name': attached_to_pagename.lower()})
-            image_file = cStringIO.StringIO(image_file[0])
-            image = Image.open(image_file)
+            image_handle = tempfile.TemporaryFile()
+            image_handle.write(image_file[0])
+            image_handle.flush()
+            image_handle.seek(0)
+            image = Image.open(image_handle)
             image_size = image.size
-            image_file.close()
+            image_handle.close()
             if size_result: # we have something to update
                 request.cursor.execute(
                     """UPDATE imageInfo SET
