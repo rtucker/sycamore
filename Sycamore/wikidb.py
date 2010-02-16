@@ -162,6 +162,9 @@ class WikiDBCursor(object):
     def fetchone(self):
         return fixUpStrings(self.db_cursor.fetchone())
 
+    def fetchoneraw(self):
+        return self.db_cursor.fetchone()
+
     def fetchall(self):
         return fixUpStrings(self.db_cursor.fetchall())
 
@@ -380,7 +383,7 @@ def getFile(request, dict, deleted=False, thumbnail=False, version=0,
                        0)
         else:
            request.cursor.execute(query, dict)
-           file_obj = request.cursor.fetchone()
+           file_obj = request.cursor.fetchoneraw()
            if not file_obj:
                 # False so that we know it's not there when we check the mc
                 file_obj = False  
@@ -391,7 +394,10 @@ def getFile(request, dict, deleted=False, thumbnail=False, version=0,
                 file_obj = new_file_obj
            
         if config.memcache:
-            request.mc.add(key, file_obj)
+            try:
+                request.mc.add(key, file_obj)
+            except MemoryError:
+                pass
 
     if file_obj:
         return file_obj[0], float(file_obj[1])
