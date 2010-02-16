@@ -191,12 +191,22 @@ def generateThumbnail(request, pagename, image_name, maxsize, temporary=False,
                       ticket=None, return_image=False, fresh=False):
     cursor = request.cursor 
     from PIL import Image
-    import cStringIO
+    import tempfile
     dict = {'filename':image_name, 'page_name':pagename}
 
-    open_imagefile = cStringIO.StringIO(wikidb.getFile(request, dict,
-                                                       fresh=fresh)[0])
-    im = Image.open(open_imagefile)
+    open_imagefile = tempfile.NamedTemporaryFile()
+    open_imagefile.write(wikidb.getFile(request, dict, fresh=fresh)[0])
+    open_imagefile.flush()
+    open_imagefile.seek(0)
+
+    try:
+        im = Image.open(open_imagefile)
+    except IOError:
+        request.write('<em style="background-color: #ffffaa; padding: 2px;">'
+                      'There was a problem with image %s.  '
+                      'I could not generate a thumbnail.</em>' % image_name)
+        return 0,0
+
     converted = 0
     if not im.palette is None:
         if im.info.has_key('transparency'):
@@ -226,7 +236,8 @@ def generateThumbnail(request, pagename, image_name, maxsize, temporary=False,
         else:
             x = maxsize
             y = int((min * maxsize)/max)
-            shrunk_im = im.resize((x, y), Image.ANTIALIAS)
+            shrunk_im = im
+            shrunk_im.thumbnail((x, y), Image.ANTIALIAS)
             shrunk_im = sharpen_thumbnail(shrunk_im)
     else:
         max = im.size[1]
@@ -237,7 +248,8 @@ def generateThumbnail(request, pagename, image_name, maxsize, temporary=False,
         else:
             x = int((min * maxsize)/max)
             y = maxsize
-            shrunk_im = im.resize((x,y), Image.ANTIALIAS)
+            shrunk_im = im
+            shrunk_im.thumbnail((x,y), Image.ANTIALIAS)
             shrunk_im = sharpen_thumbnail(shrunk_im)
 
     if converted == 1:
@@ -246,6 +258,7 @@ def generateThumbnail(request, pagename, image_name, maxsize, temporary=False,
 
     import mimetypes
     type = mimetypes.guess_type(image_name)[0][6:]
+    import cStringIO
     save_imagefile = cStringIO.StringIO()
     try:
         shrunk_im.save(save_imagefile, type, quality=90)
@@ -258,6 +271,8 @@ def generateThumbnail(request, pagename, image_name, maxsize, temporary=False,
     if return_image:
         # one-time generation for certain things like preview.
         # just return the image string
+        save_imagefile.close()
+        open_imagefile.close()
         return image_value
     dict = {'x':x, 'y':y, 'filecontent':image_value,
             'uploaded_time':time.time(), 'filename':image_name,
