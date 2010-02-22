@@ -7,23 +7,45 @@ from Sycamore.Page import Page
 
 # can't really be cached right now, maybe later
 # (use memcache and might not matter)
-Dependencies = ["time"] 
+Dependencies = ["time"]
 
 def execute(macro, args, formatter=None):
     formatter = macro.formatter
+    pages = []
     if not args:
-        page = macro.formatter.page
+        pages.append(macro.formatter.page)
     else:
-        page = Page(args, macro.request)
-    links_here = page.getPageLinksTo()
-    pages_deco = [(pagename.lower(), pagename) for pagename in links_here]
-    pages_deco.sort()
-    links_here = [word for lower_word, word in pages_deco]
+        pagenames = args.split(',')
+        if pagenames[0] == 'or':
+            outputtype = 'or'
+            del(pagenames[0])
+        elif pagenames[0] == 'and':
+            outputtype = 'and'
+            del(pagenames[0])
+        else:
+            outputtype = 'and'
+
+        for pagename in pagenames:
+            pages.append(Page(pagename, macro.request))
+
+    # iterate through the pages, find links
+    linkset = None
+    for page in pages:
+        links_here = page.getPageLinksTo()
+        pages_deco = [(pagename.lower(), pagename) for pagename in links_here]
+        pages_deco.sort()
+        links_here = set([word for lower_word, word in pages_deco])
+        if not linkset:
+            linkset = links_here
+        elif outputtype == 'and':
+            linkset = linkset.intersection(links_here)
+        elif outputtype == 'or':
+            linkset = linkset.union(links_here)
 
     text = []
-    if links_here:
+    if linkset:
         text.append(formatter.bullet_list(1))
-        for link in links_here:
+        for link in linkset:
             text.append('%s%s%s' % (formatter.listitem(1),
                                     formatter.pagelink(link, generated=True),
                                     formatter.listitem(0)))
