@@ -13,17 +13,16 @@ def execute(macro, args, formatter=None):
     formatter = macro.formatter
     pages = []
     if not args:
+        # use the current page
         pages.append(macro.formatter.page)
     else:
         pagenames = args.split(',')
+        do_union = False
         if pagenames[0] == 'or':
-            outputtype = 'or'
+            do_union = True
             del(pagenames[0])
         elif pagenames[0] == 'and':
-            outputtype = 'and'
             del(pagenames[0])
-        else:
-            outputtype = 'and'
 
         for pagename in pagenames:
             pages.append(Page(pagename, macro.request))
@@ -33,14 +32,16 @@ def execute(macro, args, formatter=None):
     for page in pages:
         links_here = page.getPageLinksTo()
         pages_deco = [(pagename.lower(), pagename) for pagename in links_here]
-        pages_deco.sort()
         links_here = set([word for lower_word, word in pages_deco])
         if not linkset:
-            linkset = links_here
-        elif outputtype == 'and':
-            linkset = linkset.intersection(links_here)
-        elif outputtype == 'or':
+            # first time through
+            linkset = links_here.copy()
+        elif do_union:
+            # OR the list
             linkset = linkset.union(links_here)
+        else:
+            # AND the list
+            linkset = linkset.intersection(links_here)
 
     text = []
     if linkset:
