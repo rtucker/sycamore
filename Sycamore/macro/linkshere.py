@@ -45,7 +45,7 @@ def execute(macro, args, formatter=None):
     text = []
     if linkset:
         text.append(formatter.bullet_list(1))
-        for link in linkset:
+        for link in sorted(linkset):
             text.append('%s%s%s' % (formatter.listitem(1),
                                     formatter.pagelink(link, generated=True),
                                     formatter.listitem(0)))
