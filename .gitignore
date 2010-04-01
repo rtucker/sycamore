@@ -5,3 +5,7 @@
 # caches
 share/data/dict.cache
 share/web/wiki/dumps
+
+# google fun
+share/web/wiki/google*.html
+
