@@ -263,7 +263,7 @@ def execute(macro, args, formatter=None):
         return macro_text
 
     size = px_size
-    oklicenses = ['1','2','3','4','5','6','7']
+    oklicenses = ['1','2','3','4','5','6','7','8']
     ok = mc.get('flickr-%s-%s-ok' % (url_image_name, size))
 
     if not ok:
