@@ -12,6 +12,7 @@ Dependencies = ["time"]
 def execute(macro, args, formatter=None):
     formatter = macro.formatter
     pages = []
+    debug = []
     if not args:
         # use the current page
         pages.append(macro.formatter.page)
@@ -24,8 +25,30 @@ def execute(macro, args, formatter=None):
         elif pagenames[0] == 'and':
             del(pagenames[0])
 
+        lastpage = []
         for pagename in pagenames:
-            pages.append(Page(pagename, macro.request))
+            curpage = Page(pagename, macro.request)
+            if not curpage.exists():
+                # The page doesn't exist.  Either someone's making
+                # stuff up, or there's a comma in the page name.
+                debug.append('<!-- "%s" does not exist -->' % curpage.page_name)
+                if lastpage:
+                    # We have something to try from last time.
+                    lastpage.append(pagename)
+                    debug.append('<!-- trying "%s" -->' % ','.join(lastpage))
+                    curpage = Page(','.join(lastpage), macro.request)
+                    if curpage.exists():
+                        # awesome!
+                        debug.append('<!-- "%s" does exist -->' % curpage.page_name)
+                        lastpage = []
+                        pages.append(curpage)
+                else:
+                    debug.append('<!-- "%s" appended to rescanner -->' % pagename)
+                    lastpage.append(pagename)
+            else:
+                debug.append('<!-- "%s" does exist -->' % curpage.page_name)
+                lastpage = []
+                pages.append(curpage)
 
     # iterate through the pages, find links
     linkset = None
@@ -42,6 +65,7 @@ def execute(macro, args, formatter=None):
         else:
             # AND the list
             linkset = linkset.intersection(links_here)
+        debug.append('<!-- DEBUG: "%s" yielded %i links -->' % (page.page_name, len(links_here)))
 
     text = []
     if linkset:
@@ -51,5 +75,7 @@ def execute(macro, args, formatter=None):
                                     formatter.pagelink(link, generated=True),
                                     formatter.listitem(0)))
         text.append(formatter.bullet_list(0))
+
+    text.extend(debug)
     
     return ''.join(text)
