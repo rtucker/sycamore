@@ -211,6 +211,24 @@ def line_has_just_macro(macro, args, formatter):
         return True
     return False
 
+def licenses_getInfo(license_id):
+    """Returns (name, url) for a license given its license_id"""
+    method = 'flickr.photos.licenses.getInfo'
+    data = flickr._doget(method, auth=False)
+    license_id = int(license_id)
+
+    if license_id in [1, 2, 3, 4, 5, 6]:
+        license_class = 'Creative Commons 2.0 '
+    else:
+        license_class = ''
+
+    try:
+        name = 'License: ' + license_class + data.rsp.licenses.license[license_id].name
+        url = data.rsp.licenses.license[license_id].url
+        return (name, url)
+    except:
+        return None
+
 def execute(macro, args, formatter=None):
     if not formatter:
         formatter = macro.formatter
@@ -262,6 +280,23 @@ def execute(macro, args, formatter=None):
         macro_text += '%s does not seem to be a valid Flickr photo' % image_name
         return macro_text
 
+    licensename = mc.get('flickr-license-%s' % photohandle.license)
+    try:
+        # sanity check on licensename
+        tmpfoo1, tmpfoo2 = licensename
+        if not (type(tmpfoo1) == type(tmpfoo2) == type(str())):
+            licensename = None
+    except:
+        licensename = None
+
+    if not licensename:
+        licensename = licenses_getInfo(photohandle.license)
+        if licensename:
+            mc.set('flickr-license-%s' % photohandle.license, licensename, time=3*24*60*60)
+        else:
+            licensename = ('unknown license id %s', 'http://www.flickr.com/services/api/flickr.photos.licenses.getInfo.html')
+            mc.set('flickr-license-%s' % photohandle.license, licensename, time=60*60)
+
     size = px_size
     oklicenses = ['1','2','3','4','5','6','7','8']
     ok = mc.get('flickr-%s-%s-ok' % (url_image_name, size))
@@ -310,7 +345,7 @@ def execute(macro, args, formatter=None):
     if not formatter.isPreview():
         touchCaption(pagename, pagename, image_name, caption, macro.request)
     if caption:
-        caption += ' (by Flickr user %s)' % ownername
+        caption += ' (by Flickr user %s [%s license info])' % (ownername, licensename[1])
         # parse the caption string
         caption = wikiutil.stripOuterParagraph(wikiutil.wikifyString(
             caption, formatter.request, formatter.page, formatter=formatter))
@@ -326,67 +361,67 @@ def execute(macro, args, formatter=None):
         if caption and border:
             html.append('<span class="%s thumb" style="width: %spx;">'
                         '<a style="color: black;" href="%s">'
-                        '<img src="%s" alt="%s" style="display:block;"/></a>'
+                        '<img src="%s" alt="%s" title="%s" style="display:block;"/></a>'
                         '<span>%s</span>'
                         '</span>' %
                         (floatSide, int(x)+2, full_size_url,
              baseurl + '?id=' + image_name + '&size=' + px_size,
-                         image_name, caption))
+                         image_name, licensename[0], caption))
         elif border:
             html.append('<span class="%s thumb" style="width: %spx;">'
                         '<a style="color: black;" href="%s">'
-                        '<img src="%s" alt="%s" style="display:block;"/></a>'
+                        '<img src="%s" alt="%s" title="%s" style="display:block;"/></a>'
                         '</span>' %
                         (floatSide, int(x)+2, full_size_url,
              baseurl + '?id=' + image_name + '&size=' + px_size,
-                         image_name))
+                         image_name, licensename[0]))
         elif caption and not border:
             html.append('<span class="%s thumb noborder" style="width: %spx;">'
                         '<a style="color: black;" href="%s">'
-                        '<img src="%s" alt="%s" style="display:block;"/></a>'
+                        '<img src="%s" alt="%s" title="%s" style="display:block;"/></a>'
                         '<span>%s</span></span>' %
                         (floatSide, int(x)+2, full_size_url,
              baseurl + '?id=' + image_name + '&size=' + px_size,
-                         image_name, caption))
+                         image_name, licensename[0], caption))
         else:
             html.append('<span class="%s thumb noborder" style="width: %spx;">'
                         '<a style="color: black;" href="%s">'
-                        '<img src="%s" alt="%s" style="display:block;"/></a>'
+                        '<img src="%s" alt="%s" title="%s" style="display:block;"/></a>'
                         '</span>' %
                         (floatSide, int(x)+2, full_size_url,
              baseurl + '?id=' + image_name + '&size=' + px_size,
-                         image_name))
+                         image_name, licensename[0]))
     else:
         x, y = getImageSize(pagename, photohandle, px_size, macro.request)
 
         if not border and not caption:
             img_string = ('<a href="%s">'
-                          '<img class="borderless" src="%s" alt="%s"/></a>' %
+                          '<img class="borderless" src="%s" alt="%s" title="%s"/></a>' %
                           (full_size_url,
                baseurl + '?id=' + image_name + '&size=' + px_size,
-                           image_name))
+                           image_name, licensename[0]))
         elif border and not caption:
             img_string = ('<a href="%s">'
-                          '<img class="border" src="%s" alt="%s"/></a>' %
+                          '<img class="border" src="%s" alt="%s" title="%s"/></a>' %
                           (full_size_url,
                baseurl + '?id=' + image_name + '&size=' + px_size,
-                           image_name))
+                           image_name, licensename[0]))
         elif border and caption:
             img_string = ('<a href="%s">'
-                          '<img class="border" src="%s" alt="%s"/></a>'
+                          '<img class="border" src="%s" alt="%s" title="%s"/></a>'
                           '<div style="width: %spx;">'
                           '<p class="normalCaption">%s</p></div>' %
                           (full_size_url,
                baseurl + '?id=' + image_name + '&size=' + px_size,
-                           image_name, x, caption))
+                           image_name, licensename[0], x, caption))
         elif not border and caption:
             img_string = ('<a href="%s">'
-                          '<img class="borderless" src="%s" alt="%s"/></a>'
+                          '<img class="borderless" src="%s" alt="%s" title="%s"/></a>'
                           '<div style="width: %spx;">'
                           '<p class="normalCaption">%s</p></div>' %
                           (full_size_url,
                baseurl + '?id=' + image_name + '&size=' + px_size,
-                           image_name, x, caption))
+                           image_name, licensename[0], x, caption))
 
         if alignment == 'right':
             img_string = '<span class="floatRight">' + img_string + '</span>'
