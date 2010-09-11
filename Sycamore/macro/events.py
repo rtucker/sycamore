@@ -354,25 +354,26 @@ def add_event_form_box(htmltext, macro):
                                            str(int(current_hour)))
     htmltext.append(newhourstring)
 
-    if not str(int(int(current_minute)/10)) == 0:
-       rounded_min = str(int(int(current_minute)/10)) + "0"
-    else:
-       rounded_min = "0"
+    rounded_min = (int(current_minute)/15 + 1)*15
+    if rounded_min is 60:
+        rounded_min = 0
+
+    rounded_min = str(rounded_min)
+
     minutestring = (' : <select name="minute">\n '
                     '<option value="0">00</option>\n '
-                    '<option value="10">10</option>\n '
-                    '<option value="20">20</option>\n '
+                    '<option value="15">15</option>\n '
                     '<option value="30">30</option>\n '
-                    '<option value="40">40</option>\n '
-                    '<option value="50">50</option>\n '
+                    '<option value="45">45</option>\n '
                     '</select> (in %s)</p>\n' % event_timezone)
     newminutestring = minutestring.replace('value="%s"' % rounded_min,
                                            'value="%s" selected' % rounded_min)
     htmltext.append(newminutestring)
 
     htmltext.append(
+                '<p>Describe event:</p>'
                 '<textarea name="event_text" rows="5" cols="67" wrapping=yes>'
-                'Describe event</textarea><br>\n'
+                '</textarea><br>\n'
                 '<input class="formbutton" type="submit" name="button" '
                        'value="Add Event">\n'
                 '</form></td></tr></table>')
