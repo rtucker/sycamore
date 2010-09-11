@@ -94,8 +94,6 @@ def doParse(text, macro, keep_outer_paragraph=False):
 def full_events(events, are_events_today, htmltext, macro):
     old_date = ''
 
-    event_timezone = macro.request.config.tz
-
     # clear events that have passed
     yesterday_struct = time.gmtime(time.time()-60*60*24)
     yesterday = list(yesterday_struct[0:3]) + [0,0,0,0,0,0]
@@ -121,17 +119,7 @@ def full_events(events, are_events_today, htmltext, macro):
         events.append(result) 
         result = macro.request.cursor.fetchone()
 
-    current_time = macro.request.user.getFormattedDateTime(time.time())
-    year_cut = string.split(current_time," ")[0]
-    current_year = string.split(year_cut, "-")[0]
-    month_cut = string.split(current_time," ")[0]
-    current_month = string.split(month_cut,"-")[1]
-    day_cut = string.split(current_time," ")[0]
-    current_day = string.split(day_cut,"-")[2]
-    hour_cut = string.split(current_time," ")[1]
-    current_hour = string.split(hour_cut,":")[0]
-    minute_cut = string.split(current_time," ")[1]
-    current_minute = string.split(minute_cut,":")[1]
+    add_event_form_box(htmltext, macro)
 
     for event in events:
             event_name = event[5]
@@ -240,6 +228,21 @@ def full_events(events, are_events_today, htmltext, macro):
                             (string_day, string_month, day, id, processed_name,
                              ptime, processed_location, processed_text,
                              user_link))
+
+def add_event_form_box(htmltext, macro):
+    event_timezone = macro.request.config.tz
+
+    current_time = macro.request.user.getFormattedDateTime(time.time())
+    year_cut = string.split(current_time," ")[0]
+    current_year = string.split(year_cut, "-")[0]
+    month_cut = string.split(current_time," ")[0]
+    current_month = string.split(month_cut,"-")[1]
+    day_cut = string.split(current_time," ")[0]
+    current_day = string.split(day_cut,"-")[2]
+    hour_cut = string.split(current_time," ")[1]
+    current_hour = string.split(hour_cut,":")[0]
+    minute_cut = string.split(current_time," ")[1]
+    current_minute = string.split(minute_cut,":")[1]
 
     title = "Post a new event:"
     htmltext.append(
