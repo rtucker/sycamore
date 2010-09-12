@@ -76,11 +76,6 @@ def do_search(pagename, request, fieldname='inline_string', inc_title=1,
     _ = request.getText
     start = time.clock()
 
-    # send http headers
-    request.http_headers()
-
-    request.formatter = Formatter(request)
-
     # get parameters
     if request.form.has_key(fieldname):
         needle = request.form[fieldname][0]
@@ -113,6 +108,18 @@ def do_search(pagename, request, fieldname='inline_string', inc_title=1,
                 twith = int(request.form.get('twith')[0])
         if request.form.get('pwith'):
                 pwith = int(request.form.get('pwith')[0])
+
+    # if the page exists verbatimly, send the user there
+    if Page(needle, request).exists():
+        real_page = Page(needle, request)
+        if request.user.may.read(real_page):
+            url = real_page.url()
+            request.http_redirect(url, status="302 Exact Search Result Found")
+
+    # send http headers
+    request.http_headers()
+
+    request.formatter = Formatter(request)
 
     if needle[0] == needle[-1] == '"':
         printable_needle = needle[1:-1]
