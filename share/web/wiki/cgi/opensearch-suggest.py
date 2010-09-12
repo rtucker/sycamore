@@ -28,7 +28,7 @@ import string
 import sys
 import time
 import urllib
-import xapian
+#import xapian
 
 # Where am I?  Split argv[0] on /share and add the first half to the path.
 sycamoreroot = sys.argv[0].split('/share')[0]
@@ -55,8 +55,8 @@ def timeago(timestamp):
     else:
         return '%i months ago' % int(hoursago/24/30)
 
-# runquery: runs a query against the db
-def runquery(cur, dbs, query, limit=maxresults):
+# xapianrunquery: runs a query against the db
+def xapianrunquery(cur, dbs, query, limit=maxresults):
     # split the query into words
     querysplit = query.split()
     # startterms: everything except the last word
@@ -88,6 +88,13 @@ def runquery(cur, dbs, query, limit=maxresults):
 
     return results
 
+# pgrunquery: run the query against the postgresql db
+def pgrunquery(cur, query, limit=maxresults):
+    # append % to the query
+    query = query + '%'
+    cur.execute("SELECT propercased_name,edittime FROM curpages WHERE name like %(query)s", dict(query=query))
+    return cur.fetchall()
+
 # dipdatabase: gets propercased_name and edittime
 def dipdatabase(cur, name):
     result = mc.get(memcachedtag + 'pcet-' + urllib.quote(name))
@@ -108,9 +115,9 @@ except:
 cur = conn.cursor()
 
 # Prep xapian
-dbs = xapian.Database()
-for i in databases:
-    dbs.add_database(xapian.Database(i))
+#dbs = xapian.Database()
+#for i in databases:
+#    dbs.add_database(xapian.Database(i))
 
 mc = memcache.Client(config.memcache_servers)
 
@@ -122,13 +129,18 @@ if not (form.has_key("format")): format = 'json'
 else: format = form["format"].value
 if not (form.has_key("query")): query = 'Front Page'
 else: query = urllib.unquote_plus(form["query"].value)
+if (form.has_key("search")):
+    # This is coming in from ajaxSuggestions.js
+    format = 'list'
+    query = urllib.unquote_plus(form["search"].value)
 
 # Process the request
 # Gets propercased_name (human-readable name), edittime (unix timestamp)
 rows = mc.get(memcachedtag + urllib.quote(query))
 
 if not rows:
-    rows = runquery(cur, dbs, query)
+    #rows = xapianrunquery(cur, dbs, query)
+    rows = pgrunquery(cur, query)
 
     if len(rows) == 0:
         # try just the plain name
@@ -153,6 +165,15 @@ if format == 'json':
 
     sys.stdout.write('Content-type: application/json\n\n')
     sys.stdout.write(json.dumps([query, resultlist, desclist, urllist]))
+
+elif format == 'jsonsimple':
+    # Create a list of just page names
+    resultlist = []
+    for i in rows:
+        resultlist.append(i[0])
+
+    sys.stdout.write('Content-type: application/json\n\n')
+    sys.stdout.write(json.dumps(resultlist))
 
 elif format == 'list':
     sys.stdout.write('Content-type: text/html\n\n')
