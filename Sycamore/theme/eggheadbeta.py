@@ -757,8 +757,14 @@ class Theme(ThemeBase):
         else:
             html = ''
 
+        html += ('<script type="text/javascript">'
+                 'onLoadStuff.push('
+                 '\'document.forms.searchbox.inline_string.focus();\');'
+                 '</script>\n')
+
         html += (
-            '<form method="GET" action="%(script_name)s/%(q_page_name)s">\n'
+            '<form name="searchbox" method="GET"'
+            'action="%(script_name)s/%(q_page_name)s">\n'
             '<input type="hidden" name="action" value="%(search_action)s">\n'
             '%(search_html)s\n'
             '</form>' % dict)
