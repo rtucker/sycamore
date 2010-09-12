@@ -94,8 +94,6 @@ def doParse(text, macro, keep_outer_paragraph=False):
 def full_events(events, are_events_today, htmltext, macro):
     old_date = ''
 
-    event_timezone = macro.request.config.tz
-
     # clear events that have passed
     yesterday_struct = time.gmtime(time.time()-60*60*24)
     yesterday = list(yesterday_struct[0:3]) + [0,0,0,0,0,0]
@@ -121,17 +119,7 @@ def full_events(events, are_events_today, htmltext, macro):
         events.append(result) 
         result = macro.request.cursor.fetchone()
 
-    current_time = macro.request.user.getFormattedDateTime(time.time())
-    year_cut = string.split(current_time," ")[0]
-    current_year = string.split(year_cut, "-")[0]
-    month_cut = string.split(current_time," ")[0]
-    current_month = string.split(month_cut,"-")[1]
-    day_cut = string.split(current_time," ")[0]
-    current_day = string.split(day_cut,"-")[2]
-    hour_cut = string.split(current_time," ")[1]
-    current_hour = string.split(hour_cut,":")[0]
-    minute_cut = string.split(current_time," ")[1]
-    current_minute = string.split(minute_cut,":")[1]
+    add_event_form_box(htmltext, macro)
 
     for event in events:
             event_name = event[5]
@@ -240,6 +228,21 @@ def full_events(events, are_events_today, htmltext, macro):
                             (string_day, string_month, day, id, processed_name,
                              ptime, processed_location, processed_text,
                              user_link))
+
+def add_event_form_box(htmltext, macro):
+    event_timezone = macro.request.config.tz
+
+    current_time = macro.request.user.getFormattedDateTime(time.time())
+    year_cut = string.split(current_time," ")[0]
+    current_year = string.split(year_cut, "-")[0]
+    month_cut = string.split(current_time," ")[0]
+    current_month = string.split(month_cut,"-")[1]
+    day_cut = string.split(current_time," ")[0]
+    current_day = string.split(day_cut,"-")[2]
+    hour_cut = string.split(current_time," ")[1]
+    current_hour = string.split(hour_cut,":")[0]
+    minute_cut = string.split(current_time," ")[1]
+    current_minute = string.split(minute_cut,":")[1]
 
     title = "Post a new event:"
     htmltext.append(
@@ -351,25 +354,26 @@ def full_events(events, are_events_today, htmltext, macro):
                                            str(int(current_hour)))
     htmltext.append(newhourstring)
 
-    if not str(int(int(current_minute)/10)) == 0:
-       rounded_min = str(int(int(current_minute)/10)) + "0"
-    else:
-       rounded_min = "0"
+    rounded_min = (int(current_minute)/15 + 1)*15
+    if rounded_min is 60:
+        rounded_min = 0
+
+    rounded_min = str(rounded_min)
+
     minutestring = (' : <select name="minute">\n '
                     '<option value="0">00</option>\n '
-                    '<option value="10">10</option>\n '
-                    '<option value="20">20</option>\n '
+                    '<option value="15">15</option>\n '
                     '<option value="30">30</option>\n '
-                    '<option value="40">40</option>\n '
-                    '<option value="50">50</option>\n '
+                    '<option value="45">45</option>\n '
                     '</select> (in %s)</p>\n' % event_timezone)
     newminutestring = minutestring.replace('value="%s"' % rounded_min,
                                            'value="%s" selected' % rounded_min)
     htmltext.append(newminutestring)
 
     htmltext.append(
+                '<p>Describe event:</p>'
                 '<textarea name="event_text" rows="5" cols="67" wrapping=yes>'
-                'Describe event</textarea><br>\n'
+                '</textarea><br>\n'
                 '<input class="formbutton" type="submit" name="button" '
                        'value="Add Event">\n'
                 '</form></td></tr></table>')
