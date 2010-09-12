@@ -731,11 +731,10 @@ class Theme(ThemeBase):
         @return: search form html
         """
         _ = self.request.getText
-        #if config.opensearch_suggest_url:
-        if False:
+        if config.opensearch_suggest_url:
             dict = {
                 'search_title': _("Search"),
-                'search_html': _("""Search: <input class="%s" type="text" name="inline_string" value="" size="15" maxlength="95">&nbsp;<input type="image" src="http://%s/wiki/%s/img/search.png" alt="[?]">&nbsp;&nbsp;""" % (config.opensearch_suggest_url, config.wiki_base_domain, config.theme_default)),
+                'search_html': _("""Search: <input id="inline_string" type="text" name="inline_string" value="" size="15" maxlength="95">&nbsp;<input type="image" src="/wiki/%s/img/search.png" alt="[?]">&nbsp;&nbsp;""" % (config.theme_default)),
                 }
         else:
             dict = {
@@ -748,12 +747,13 @@ class Theme(ThemeBase):
             dict['search_action'] = 'search'
         dict.update(d)
 
-        #if config.opensearch_suggest_url:
-        if False:
+        if config.opensearch_suggest_url:
             html = (
-                '<script type="text/javascript" src="/wiki/ajaxSuggestions.js"></script>\n'
-                '<style type="text/css">@import url("/wiki/ajax-suggestions.css");</style>\n'
-                '<div id="search-result-suggestions"><div id="search-results"></div></div>\n')
+                '<script type="text/javascript" src="/wiki/suggest/jquery.js"></script>\n'
+                '<script type="text/javascript" src="/wiki/suggest/dimensions.js"></script>\n'
+                '<script type="text/javascript" src="/wiki/suggest/autocomplete.js"></script>\n'
+                '<script type="text/javascript">$(function(){setAutoComplete("inline_string", "results", "/wiki/cgi/opensearch-suggest.py?format=jsonsimple&query=");});</script>'
+                '<style type="text/css">@import url("/wiki/suggest/autocomplete.css");</style>\n')
         else:
             html = ''
 
