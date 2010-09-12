@@ -732,9 +732,13 @@ class Theme(ThemeBase):
         """
         _ = self.request.getText
         if config.opensearch_suggest_url:
+            if wiki_global:
+                placeholder = 'all wikis'
+            else:
+                placeholder = self.request.config.sitename
             dict = {
                 'search_title': _("Search"),
-                'search_html': _("""Search: <input id="inline_string" type="text" name="inline_string" value="" size="15" maxlength="95">&nbsp;<input type="image" src="/wiki/%s/img/search.png" alt="[?]">&nbsp;&nbsp;""" % (config.theme_default)),
+                'search_html': _("""Search: <input id="inline_string" type="text" name="inline_string" value="" size="20" maxlength="95" placeholder="%s" tabindex="1" autocomplete="off" accesskey="f" title="Search RocWiki [ctrl-alt-f]">&nbsp;<input type="image" src="/wiki/%s/img/search.png" alt="[?]">&nbsp;&nbsp;""" % (placeholder, config.theme_default)),
                 }
         else:
             dict = {
