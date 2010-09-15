@@ -761,10 +761,11 @@ class Theme(ThemeBase):
         else:
             html = ''
 
-        html += ('<script type="text/javascript">'
-                 'onLoadStuff.push('
-                 '\'document.forms.searchbox.inline_string.focus();\');'
-                 '</script>\n')
+        # This was causing some issues with the Recent Changes page.
+        #html += ('<script type="text/javascript">'
+        #         'onLoadStuff.push('
+        #         '\'document.forms.searchbox.inline_string.focus();\');'
+        #         '</script>\n')
 
         html += (
             '<form name="searchbox" method="GET"'
