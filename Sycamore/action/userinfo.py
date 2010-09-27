@@ -162,7 +162,7 @@ def display_edits(request, userpage, on_pagename):
 
         pagename = edit[0]
         mtime = edit[1]
-        userIp = edit[2]
+        userIp = '<a href="http://revip.info/ipinfo/%s">%s</a>' % (edit[2], edit[2])
         editType = edit[3]
         comment = edit[4]
         wiki_name = edit[5]
