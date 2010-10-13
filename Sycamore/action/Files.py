@@ -20,8 +20,8 @@ import mimetypes
 import time
 import urllib
 import string
-import sha
 import tempfile
+import hashlib
 import types
 import xml.dom.minidom
 
@@ -126,7 +126,7 @@ def _createTicket(tm = None):
     Create a ticket using a site-specific secret (the config)
     """
     ticket = (tm or "%010x" % time.time())
-    digest = sha.new()
+    digest = hashlib.new('sha1')
     digest.update(ticket)
 
     cfgvars = vars(config)
