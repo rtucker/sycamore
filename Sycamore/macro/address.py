@@ -416,6 +416,7 @@ def execute(macro, args, formatter):
 
     lat = None
     long = None
+    parm1 = None
     if newformat.search(args):
         (address,lat,long) = newformat.search(args).groups()
     elif oldformat.search(args):
@@ -448,8 +449,10 @@ def execute(macro, args, formatter):
     if place.latitude is None:
         return wikified_address
     else:
-        out = wikified_address
-        nearby = place.getNearby()
+        if parm1:
+            out = parm1
+        else:
+            out = wikified_address
         out += ' <a href="http://maps.google.com/maps?f=d&hl=en&daddr='
         out += urllib.quote_plus(address)
         out += '"><img class="dd_icon" '
