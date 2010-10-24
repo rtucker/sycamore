@@ -450,6 +450,12 @@ def execute(macro, args, formatter):
     else:
         out = wikified_address
         nearby = place.getNearby()
+        out += ' <a href="http://maps.google.com/maps?f=d&hl=en&daddr='
+        out += urllib.quote_plus(address)
+        out += '"><img class="dd_icon" '
+        out += 'src="http://www.google.com/mapfiles/dd-start.png" '
+        out += 'alt="[Directions]" title="Click for driving, walking, or bus '
+        out += 'directions from Google" height="17" width="10"></a>'
         out += mapHTML(macro,place,nearby)
         ignore = formatter.name != 'text_python' or formatter.page.prev_date
         if not ignore:
