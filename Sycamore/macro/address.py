@@ -379,6 +379,18 @@ class Location:
           self.macro.request.postCommitActions.append(
             (caching.CacheEntry(pagename, self.macro.request).clear, ))
 
+    def getAddressCount(self):
+        """
+        Returns how many Address macros there are on this page.
+        """
+        cursor = self.macro.request.cursor
+        cursor.execute("""SELECT count(pagename)
+                          FROM mappoints
+                          WHERE pagename=%(pagename)s and
+                                wiki_id=%(wiki_id)s""",
+                         {'pagename':self.name,
+                          'wiki_id':self.macro.request.config.wiki_id})
+        return cursor.fetchone()[0]
 
 def mapHTML(macro, place, nearby):
     html = (
@@ -459,6 +471,15 @@ def execute(macro, args, formatter):
         out += 'src="http://www.google.com/mapfiles/dd-start.png" '
         out += 'alt="[Directions]" title="Click for driving, walking, or bus '
         out += 'directions from Google" height="17" width="10"></a>'
+        addresscount = place.getAddressCount()
+        if addresscount > 5:
+            # There's more addresses than usual; let's ratchet back the nearbys
+            maxnearby = int(75/addresscount)
+            out += ' <!-- limiting to %i of %i nearby locations -->' % (
+                    maxnearby, addresscount)
+        else:
+            maxnearby=15
+        nearby = place.getNearby(max=maxnearby)
         out += mapHTML(macro,place,nearby)
         ignore = formatter.name != 'text_python' or formatter.page.prev_date
         if not ignore:
