@@ -462,7 +462,8 @@ def execute(macro, args, formatter):
         return wikified_address
     else:
         if parm1:
-            out = parm1
+            out = wikiutil.stripOuterParagraph(
+                    wikiutil.wikifyString(parm1, macro.request, formatter.page))
         else:
             out = wikified_address
         out += ' <a href="http://maps.google.com/maps?f=d&hl=en&daddr='
