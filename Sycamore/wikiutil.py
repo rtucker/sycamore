@@ -1598,8 +1598,7 @@ var onLoadStuff = new Array();</script>""" % (config.url_prefix, time.time(),
     }
 
     if request.isSSL():
-        d['script_name'] = request.getQualifiedURL(uri=d['script_name'],
-                                                   force_ssl_off=True)
+        d['script_name'] = request.getQualifiedURL(uri=d['script_name'])
     # add quoted versions of pagenames
     newdict = {}
     for key in d:

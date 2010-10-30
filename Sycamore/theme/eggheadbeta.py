@@ -81,7 +81,7 @@ class Theme(ThemeBase):
                         uri=getAttachUrl(
                             self.images_pagename, 'logo.png', self.request,
                             ts=last_modified),
-                        force_ssl_off=True),
+                        ),
                      self.png_behavior, height, width))
             else:
                 html.append(
@@ -119,7 +119,7 @@ class Theme(ThemeBase):
                         uri=getAttachUrl(
                             self.images_pagename, filename, self.request,
                             ts=last_modified),
-                        force_ssl_off=True),
+                        ),
                      name, self.png_behavior, height, width, name))
             else:
                 icon = (

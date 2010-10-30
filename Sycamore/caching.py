@@ -271,6 +271,10 @@ def pageInfo(page, get_from_cache=True, cached_content=None,
     else:
         key = pagename_key
 
+    if page.request.isSSL:
+        # keep https cache separate
+        key += ",ssl"
+
     if get_from_cache:
         # check per-request cache
         if page.request.req_cache['page_info'].has_key(

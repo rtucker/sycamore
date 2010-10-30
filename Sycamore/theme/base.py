@@ -95,10 +95,10 @@ class Theme(object):
         @return: the image url
         """
         if wiki_global:
-            return "http://%s%s%s/%s/img/%s" % (config.wiki_base_domain,
-                                                config.web_dir,
-                                                config.url_prefix,
-                                                self.name, img)
+            return self.request.getQualifiedURL(
+                uri="%s%s/%s/img/%s" % (config.web_dir,
+                                        config.url_prefix,
+                                        self.name, img))
         else:
             return "%s%s/%s/img/%s" % (config.web_dir, config.url_prefix,
                                        self.name, img)
@@ -127,7 +127,7 @@ class Theme(object):
                                 config.wiki_settings_page_css),
                             '%s.css' % basename, self.request,
                              ts=last_modified),
-                    force_ssl_off=True)
+                    )
             else:
                 return Files.getAttachUrl("%s/%s" %
                         (config.wiki_settings_page,
@@ -140,7 +140,7 @@ class Theme(object):
                             (config.wiki_settings_page,
                              config.wiki_settings_page_css),
                         '%s.css' % basename, self.request),
-                    force_ssl_off=True)
+                    )
             else:
                 return Files.getAttachUrl("%s/%s" %
                         (config.wiki_settings_page,
