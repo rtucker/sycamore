@@ -122,21 +122,34 @@ class CacheEntry:
             if config.memcache:
                 page_info = pageInfo(Page(self.key, self.request),
                                      get_from_cache=False)
-                self.request.mc.set("page_info:%s" % key, page_info)
+                if self.request.isSSL():
+                    self.request.mc.set("page_info:%s,ssl" % key,
+                                        page_info)
+                    self.request.mc.delete("page_info:%s" % key)
+                else:
+                    self.request.mc.set("page_info:%s" % key, page_info)
+                    self.request.mc.delete("page_info:%s,ssl" % key)
                 self.request.mc.set("pagename:%s" % key, False)
                 self.request.mc.set("page_text:%s" % key, False)
+                self.request.mc.set("page_text:%s,ssl" % key, False)
                 self.request.mc.delete("links:%s" % key)
         else:
             if config.memcache:
                 self.request.mc.delete("page_info:%s" % key)
+                self.request.mc.delete("page_info:%s,ssl" % key)
                 self.request.mc.delete("pagename:%s" % key)
                 self.request.mc.delete("page_text:%s" % key)
+                self.request.mc.delete("page_text:%s,ssl" % key)
                 self.request.mc.delete("links:%s" % key)
 
         if self.request.req_cache['page_info'].has_key((
                 key,self.request.config.wiki_id)):
             del self.request.req_cache['page_info'][
                 (key, self.request.config.wiki_id)]
+        if self.request.req_cache['page_info'].has_key((
+                key+",ssl",self.request.config.wiki_id)):
+            del self.request.req_cache['page_info'][
+                (key+",ssl", self.request.config.wiki_id)]
         if self.request.req_cache['pagenames'].has_key(
             (self.key, self.request.config.wiki_id)):
             del self.request.req_cache['pagenames'][
@@ -271,24 +284,34 @@ def pageInfo(page, get_from_cache=True, cached_content=None,
     else:
         key = pagename_key
 
-    if page.request.isSSL:
-        # keep https cache separate
-        key += ",ssl"
-
     if get_from_cache:
-        # check per-request cache
-        if page.request.req_cache['page_info'].has_key(
-            (key, page.request.config.wiki_id)):
-          return page.request.req_cache['page_info'][
-            (key, page.request.config.wiki_id)]
-        
-        # check memcache
-        if config.memcache:
-            page_info = page.request.mc.get("page_info:%s" % key)
-            if page_info:
-                page.request.req_cache['page_info'][
-                    (key, page.request.config.wiki_id)] = page_info
-                return page_info
+        # check for ssl vs. non-ssl version
+        if page.request.isSSL():
+            # check per-request cache
+            if page.request.req_cache['page_info'].has_key(
+                (key+",ssl", page.request.config.wiki_id)):
+              return page.request.req_cache['page_info'][
+                (key+",ssl", page.request.config.wiki_id)]
+            # check memcache
+            if config.memcache:
+                page_info = page.request.mc.get("page_info:%s,ssl" % key)
+                if page_info:
+                    page.request.req_cache['page_info'][
+                        (key+",ssl", page.request.config.wiki_id)] = page_info
+                    return page_info
+        else:
+            # check per-request cache
+            if page.request.req_cache['page_info'].has_key(
+                (key, page.request.config.wiki_id)):
+              return page.request.req_cache['page_info'][
+                (key, page.request.config.wiki_id)]
+            # check memcache
+            if config.memcache:
+                page_info = page.request.mc.get("page_info:%s" % key)
+                if page_info:
+                    page.request.req_cache['page_info'][
+                        (key, page.request.config.wiki_id)] = page_info
+                    return page_info
 
     # memcache failed, this means we have to get all the information
     # from the database
@@ -323,7 +346,7 @@ def pageInfo(page, get_from_cache=True, cached_content=None,
 
         # cached text
         cached_text = ('', 0)
-        if not page.prev_date:
+        if not page.prev_date and not page.request.isSSL():
               if not cached_content or not cached_time:
                   page.cursor.execute("""SELECT cachedText, cachedTime from
                       curPages where name=%(page)s and wiki_id=%(wiki_id)s""",
@@ -420,12 +443,23 @@ def pageInfo(page, get_from_cache=True, cached_content=None,
                             has_map)
 
     if config.memcache and not page.request.set_cache:
-        page.request.mc.add("page_info:%s" % key, page_info)
+        if page.request.isSSL():
+            page.request.mc.add("page_info:%s,ssl" % key, page_info)
+        else:
+            page.request.mc.add("page_info:%s" % key, page_info)
     elif config.memcache and page.request.set_cache:
-        page.request.mc.set("page_info:%s" % key, page_info)
+        if page.request.isSSL():
+            page.request.mc.set("page_info:%s,ssl" % key, page_info)
+        else:
+            page.request.mc.set("page_info:%s" % key, page_info)
 
-    page.request.req_cache['page_info'][
-        (key, page.request.config.wiki_id)] = page_info
+    if page.request.isSSL():
+        page.request.req_cache['page_info'][
+            (key+",ssl", page.request.config.wiki_id)] = page_info
+    else:
+        page.request.req_cache['page_info'][
+            (key, page.request.config.wiki_id)] = page_info
+
     return page_info
 
 def getPageLinks(pagename, request, update=False):
@@ -492,6 +526,9 @@ def deleteAllPageInfo(pagename, request):
             # we do set() rather than delete() to avoid possible race conditions
             request.mc.set("page_text:%s,%s" % (wikiutil.mc_quote(pagename),
                                                 repr(version)), False)
+            request.mc.set("page_text:%s,%s,ssl" % (
+                                                wikiutil.mc_quote(pagename),
+                                                repr(version)), False)
 
 def deleteNewerPageInfo(pagename, version, request):
     """
@@ -508,9 +545,13 @@ def deleteNewerPageInfo(pagename, version, request):
             newer_version = result[0]
             # we do set() rather than delete() to avoid possible
             # race conditions
-            request.mc.set("page_text:%s,%s" % (wikiutil.mc_quote(pagename),
+            request.mc.set("page_text:%s,%s" % (
+                                                wikiutil.mc_quote(pagename),
                                                 repr(newer_version)), False)
-
+            request.mc.set("page_text:%s,%s,ssl" % (
+                                                wikiutil.mc_quote(pagename),
+                                                repr(newer_version)), False)
+ 
 def deleteAllFileInfo(filename, pagename, request):
     """
     Delete all of the cached versions of the file.

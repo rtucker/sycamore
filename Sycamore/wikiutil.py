@@ -1190,7 +1190,7 @@ def link_tag(request, params, text=None, formatter=None, **kw):
     if formatter:
         if kw.get('absolute'):
             return formatter.url("%s%s" %
-                    (farm.getWikiURL(request.config.wiki_name, request),
+                    (request.getQualifiedURL(uri=request.getScriptname()),
                      params),
                 text, css_class, **kw)
         else:
@@ -1203,8 +1203,8 @@ def link_tag(request, params, text=None, formatter=None, **kw):
         attrs.append(' class="%s"' % css_class)
     if kw.get('absolute'):
         return ('<a%s href="%s%s">%s</a>' %
-                (''.join(attrs), farm.getWikiURL(request.config.wiki_name,
-                                                 request),
+                (''.join(attrs),
+                 request.getQualifiedURL(uri=request.getScriptname()),
                  params, text))
     else:
         return ('<a%s href="%s/%s">%s</a>' % 
