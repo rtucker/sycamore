@@ -468,9 +468,9 @@ def execute(macro, args, formatter):
             out = wikified_address
         out += ' <a href="http://maps.google.com/maps?f=d&hl=en&daddr='
         out += urllib.quote_plus(address)
-        out += '"><img class="dd_icon" '
-        out += 'src="http://www.google.com/mapfiles/dd-start.png" '
-        out += 'alt="[Directions]" title="Click for driving, walking, or bus '
+        out += '"><img class="dd_icon" src="'
+        out += "%s%s/dd-start.png" % (config.web_dir, config.url_prefix)
+        out += '" alt="[Directions]" title="Click for driving, walking, or bus '
         out += 'directions from Google" height="17" width="10"></a>'
         addresscount = place.getAddressCount()
         if addresscount > 5:
