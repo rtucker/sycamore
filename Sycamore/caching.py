@@ -64,13 +64,17 @@ class CacheEntry:
     def update(self, content, links):
         links = self._consider_talk_link(links)
         cached_time = time.time()
-        self.request.cursor.execute("""UPDATE curPages set
-            cachedText=%(cached_content)s, cachedTime=%(cached_time)s
-            where name=%(key)s and wiki_id=%(wiki_id)s""",
-            {'cached_content':wikidb.dbapi.Binary(content),
-             'cached_time':cached_time, 'key':self.key,
-             'wiki_id':self.request.config.wiki_id},
-            isWrite=True)
+        if not self.request.isSSL():
+            postfix = ""
+            self.request.cursor.execute("""UPDATE curPages set
+                cachedText=%(cached_content)s, cachedTime=%(cached_time)s
+                where name=%(key)s and wiki_id=%(wiki_id)s""",
+                {'cached_content':wikidb.dbapi.Binary(content),
+                 'cached_time':cached_time, 'key':self.key,
+                 'wiki_id':self.request.config.wiki_id},
+                isWrite=True)
+        else:
+            postfix = ",ssl"
         self.request.cursor.execute("""DELETE from links where
             source_pagename=%(key)s and wiki_id=%(wiki_id)s""",
             {'key':self.key, 'wiki_id':self.request.config.wiki_id},
@@ -90,14 +94,18 @@ class CacheEntry:
         page_info.cached_text = (text, cached_time)
         if config.memcache:
            if self.request.set_cache:
-             self.request.mc.set("page_info:%s" % wikiutil.mc_quote(self.key),
-                                 page_info)
+             self.request.mc.set("page_info:%s%s" % 
+                                  (wikiutil.mc_quote(self.key), postfix),
+                                  page_info)
            else:
-             self.request.mc.add("page_info:%s" % wikiutil.mc_quote(self.key),
-                                 page_info)
+             self.request.mc.add("page_info:%s%s" %
+                                  (wikiutil.mc_quote(self.key), postfix),
+                                  page_info)
 
-        self.request.req_cache['page_info'][(wikiutil.quoteFilename(self.key),
-            self.request.config.wiki_id)] = page_info
+        if not self.request.isSSL():
+            self.request.req_cache['page_info'][(
+                        wikiutil.quoteFilename(self.key),
+                        self.request.config.wiki_id)] = page_info
 
     def content_info(self):
         page_cache = None
