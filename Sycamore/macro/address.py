@@ -380,17 +380,17 @@ class Location:
             (caching.CacheEntry(pagename, self.macro.request).clear, ))
 
     def getAddressCount(self):
-	"""
-	Returns how many Address macros there are on this page.
-	"""
-	cursor = self.macro.request.cursor
-	cursor.execute("""SELECT count(pagename)
-			  FROM mappoints
-			  WHERE pagename=%(pagename)s and
-			        wiki_id=%(wiki_id)s""",
-			{'pagename':self.name,
-			 'wiki_id':self.macro.request.config.wiki_id})
-	return cursor.fetchone()[0]
+        """
+        Returns how many Address macros there are on this page.
+        """
+        cursor = self.macro.request.cursor
+        cursor.execute("""SELECT count(pagename)
+                          FROM mappoints
+                          WHERE pagename=%(pagename)s and
+                                wiki_id=%(wiki_id)s""",
+                         {'pagename':self.name,
+                          'wiki_id':self.macro.request.config.wiki_id})
+        return cursor.fetchone()[0]
 
 def mapHTML(macro, place, nearby):
     html = (
@@ -461,19 +461,25 @@ def execute(macro, args, formatter):
     if place.latitude is None:
         return wikified_address
     else:
-	if parm1:
-	    out = parm1
-	else:
+        if parm1:
+            out = wikiutil.stripOuterParagraph(
+                    wikiutil.wikifyString(parm1, macro.request, formatter.page))
+        else:
             out = wikified_address
-	googledirectionsbaseurl = "http://maps.google.com/maps?f=d&hl=en&daddr="
-	out += ' <a href="' + googledirectionsbaseurl + urllib.quote_plus(address) + '"><img class="dd_icon" src="/wiki/dd_start.png" alt="[Directions]" title="Click for driving, walking, or bus directions from Google" height="16" width="16"></a>'
-	addresscount = place.getAddressCount()
-	if addresscount > 5:
-	    # There's more addresses than usual; let's ratchet back the nearbys
-	    maxnearby = int(75/addresscount)
-	    out += ' <!-- limiting to %i nearby locations; address count %i -->' % (maxnearby, addresscount)
-	else:
-	    maxnearby=15
+        out += ' <a href="http://maps.google.com/maps?f=d&hl=en&daddr='
+        out += urllib.quote_plus(address)
+        out += '"><img class="dd_icon" '
+        out += 'src="http://www.google.com/mapfiles/dd-start.png" '
+        out += 'alt="[Directions]" title="Click for driving, walking, or bus '
+        out += 'directions from Google" height="17" width="10"></a>'
+        addresscount = place.getAddressCount()
+        if addresscount > 5:
+            # There's more addresses than usual; let's ratchet back the nearbys
+            maxnearby = int(75/addresscount)
+            out += ' <!-- limiting to %i of %i nearby locations -->' % (
+                    maxnearby, addresscount)
+        else:
+            maxnearby=15
         nearby = place.getNearby(max=maxnearby)
         out += mapHTML(macro,place,nearby)
         ignore = formatter.name != 'text_python' or formatter.page.prev_date
