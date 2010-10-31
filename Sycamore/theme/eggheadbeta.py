@@ -635,20 +635,32 @@ class Theme(ThemeBase):
                 'var point_count=1;</script>' % dict)
         else:
             dict['map_html']  = ''
+        
+        if config.opensearch_suggest_url:
+            dict['searchsuggest_html'] = (
+                '<script type="text/javascript" src="/wiki/suggest/jquery.js"></script>'
+                '<script type="text/javascript" src="/wiki/suggest/dimensions.js"></script>'
+                '<script type="text/javascript" src="/wiki/suggest/autocomplete.js"></script>')
+            dict['stylesheets_html'] += '<link rel="stylesheet" type="text/css" charset="iso-8859-1" media="all" href="/wiki/suggest/autocomplete.css">\n'
+        else:
+            dict['searchsuggest_html'] = ''
 
         if dict['newtitle'] is self.request.config.catchphrase: 
             if self.request.config.catchphrase:
                 html = ('<title>%(sitename)s - %(newtitle)s</title>\n'
                         '%(map_html)s\n'
-                        '%(stylesheets_html)s\n' % dict)
+                        '%(stylesheets_html)s\n' 
+                        '%(searchsuggest_html)s\n' % dict)
             else:
                 html = ('<title>%(sitename)s</title>\n'
                         '%(map_html)s\n'
-                        '%(stylesheets_html)s\n' % dict)
+                        '%(stylesheets_html)s\n'
+                        '%(searchsuggest_html)s\n' % dict)
         else:
             html = ('<title>%(newtitle)s - %(sitename)s</title>'
                     '%(map_html)s\n'
-                    '%(stylesheets_html)s\n' % dict)
+                    '%(stylesheets_html)s\n'
+                    '%(searchsuggest_html)s\n' % dict)
 
         return html
 
@@ -749,17 +761,13 @@ class Theme(ThemeBase):
             dict['search_action'] = 'global_search'
         else:
             dict['search_action'] = 'search'
+
         dict.update(d)
 
+        html = ''
+
         if config.opensearch_suggest_url:
-            html = (
-                '<script type="text/javascript" src="/wiki/suggest/jquery.js"></script>\n'
-                '<script type="text/javascript" src="/wiki/suggest/dimensions.js"></script>\n'
-                '<script type="text/javascript" src="/wiki/suggest/autocomplete.js"></script>\n'
-                '<script type="text/javascript">$(function(){setAutoComplete("inline_string", "results", "/wiki/cgi/opensearch-suggest.py?format=jsonsimple&query=");});</script>'
-                '<style type="text/css">@import url("/wiki/suggest/autocomplete.css");</style>\n')
-        else:
-            html = ''
+            html += '<script type="text/javascript">$(function(){setAutoComplete("inline_string", "results", "/wiki/cgi/opensearch-suggest.py?format=jsonsimple&query=");});</script>'
 
         # This was causing some issues with the Recent Changes page.
         #html += ('<script type="text/javascript">'

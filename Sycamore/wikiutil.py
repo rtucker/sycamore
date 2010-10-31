@@ -1447,6 +1447,11 @@ def send_title(request, text, **keywords):
             '<meta http-equiv="refresh" content="%(delay)d;URL=%(url)s">' %
             keywords['pi_refresh'])
 
+    user_head.append(
+        '<script src="%s%s/utils.js?tm=%s" type="text/javascript"'
+               ' charset="utf-8"></script>' %
+            (config.web_dir, config.url_prefix, request.theme.last_modified))
+
     # global javascript variable needed by edit.js
     if not page.prev_date and page.exists() and request.user.may.edit(page):
         may_inline_edit = 'true'
@@ -1466,11 +1471,6 @@ def send_title(request, text, **keywords):
 var curTimestamp = '%s'; var action = '%s'; var may_inline_edit = %s;
 var onLoadStuff = new Array();</script>""" % (config.url_prefix, time.time(),
                                               page.url(), may_inline_edit))
-    user_head.append(
-        '<script src="%s%s/utils.js?tm=%s" type="text/javascript"'
-               ' charset="utf-8"></script>' %
-            (config.web_dir, config.url_prefix, request.theme.last_modified))
-
     if keywords.has_key('strict_title') and keywords['strict_title']:
         strict_title = keywords['strict_title']
     else:
@@ -1512,7 +1512,6 @@ var onLoadStuff = new Array();</script>""" % (config.url_prefix, time.time(),
         "%s\n"
         "%s\n" %
         (
-        ''.join(user_head),
         keywords.get('html_head', ''),
         rss_html,
         request.theme.html_head({
@@ -1521,7 +1520,8 @@ var onLoadStuff = new Array();</script>""" % (config.url_prefix, time.time(),
                                request.config.sitename),
             'print_mode': keywords.get('print_mode', False),
             'page': page
-            })
+            }),
+        ''.join(user_head),
         ))
 
     request.write("</head>\n")
