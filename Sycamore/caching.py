@@ -102,6 +102,22 @@ class CacheEntry:
                                   (wikiutil.mc_quote(self.key), postfix),
                                   page_info)
 
+           # check other version for stale data
+           if self.request.isSSL():
+             other_page_info = self.request.mc.get("page_info:%s" %
+                                        wikiutil.mc_quote(self.key))
+             if other_page_info:
+                 if other_page_info.edit_info[0] < page_info.edit_info[0]:
+                   self.request.mc.delete("page_info:%s" %
+                                           wikiutil.mc_quote(self.key))
+           else:
+             other_page_info = self.request.mc.get("page_info:%s,ssl" %
+                                        wikiutil.mc_quote(self.key))
+             if other_page_info:
+                 if other_page_info.edit_info[0] < page_info.edit_info[0]:
+                   self.request.mc.delete("page_info:%s,ssl" %
+                                           wikiutil.mc_quote(self.key))
+
         if not self.request.isSSL():
             self.request.req_cache['page_info'][(
                         wikiutil.quoteFilename(self.key),
