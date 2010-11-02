@@ -66,6 +66,7 @@ class CacheEntry:
         cached_time = time.time()
         if not self.request.isSSL():
             postfix = ""
+            other_postfix = ",ssl"
             self.request.cursor.execute("""UPDATE curPages set
                 cachedText=%(cached_content)s, cachedTime=%(cached_time)s
                 where name=%(key)s and wiki_id=%(wiki_id)s""",
@@ -75,6 +76,7 @@ class CacheEntry:
                 isWrite=True)
         else:
             postfix = ",ssl"
+            other_postfix = ""
         self.request.cursor.execute("""DELETE from links where
             source_pagename=%(key)s and wiki_id=%(wiki_id)s""",
             {'key':self.key, 'wiki_id':self.request.config.wiki_id},
@@ -103,25 +105,27 @@ class CacheEntry:
                                   page_info)
 
            # check other version for stale data
-           if self.request.isSSL():
-             other_page_info = self.request.mc.get("page_info:%s" %
-                                        wikiutil.mc_quote(self.key))
-             if other_page_info:
-                 if other_page_info.edit_info[0] < page_info.edit_info[0]:
-                   self.request.mc.delete("page_info:%s" %
-                                           wikiutil.mc_quote(self.key))
-           else:
-             other_page_info = self.request.mc.get("page_info:%s,ssl" %
-                                        wikiutil.mc_quote(self.key))
-             if other_page_info:
-                 if other_page_info.edit_info[0] < page_info.edit_info[0]:
-                   self.request.mc.delete("page_info:%s,ssl" %
-                                           wikiutil.mc_quote(self.key))
+           other_page_info = self.request.mc.get("page_info:%s%s" %
+                                 (wikiutil.mc_quote(self.key), other_postfix))
+           if other_page_info:
+               if other_page_info.edit_info[0] < page_info.edit_info[0]:
+                   self.request.mc.delete("page_info:%s%s" %
+                                 (wikiutil.mc_quote(self.key), other_postfix))
 
-        if not self.request.isSSL():
-            self.request.req_cache['page_info'][(
-                        wikiutil.quoteFilename(self.key),
+        self.request.req_cache['page_info'][(
+                        wikiutil.quoteFilename(self.key)+postfix,
                         self.request.config.wiki_id)] = page_info
+
+        if self.request.req_cache['page_info'].has_key((
+                        wikiutil.quoteFilename(self.key)+other_postfix,
+                        self.request.config.wiki_id)):
+            other_page_info = self.request.req_cache['page_info'][(
+                        wikiutil.quoteFilename(self.key)+other_postfix,
+                        self.request.config.wiki_id)]
+            if other_page_info.edit_info[0] < page_info.edit_info[0]:
+                del self.request.req_cache['page_info'][(
+                        wikiutil.quoteFilename(self.key)+other_postfix,
+                        self.request.config.wiki_id)]
 
     def content_info(self):
         page_cache = None
@@ -293,6 +297,50 @@ def find_meta_text(page, fresh=False):
     meta_text = '\n'.join(meta_text)
     return meta_text
 
+def validate_caches(page):
+    """
+    Validates that all cached versions of a page have the same edit time.
+    Clear any that are out of date.
+    """
+
+    pagename_key = wikiutil.mc_quote(page.page_name.lower())
+    if page.prev_date:
+        key = "%s,%s" % (pagename_key, repr(page.prev_date))
+    else:
+        key = pagename_key
+
+    wiki_id = page.request.config.wiki_id
+
+    timestamps = {}
+
+    if page.request.req_cache['page_info'].has_key((key, wiki_id)):
+        main_rcache = page.request.req_cache['page_info'][(key, wiki_id)]
+        timestamps['main_rcache'] = main_rcache.edit_info[0]
+        
+    if page.request.req_cache['page_info'].has_key((key+',ssl', wiki_id)):
+        ssl_rcache = page.request.req_cache['page_info'][(key+',ssl', wiki_id)]
+        timestamps['ssl_rcache'] = ssl_rcache.edit_info[0]
+
+    if config.memcache:
+        main_memcache = page.request.mc.get("page_info:%s" % key)
+        if main_memcache:
+            timestamps['main_memcache'] = main_memcache.edit_info[0]
+        ssl_memcache = page.request.mc.get("page_info:%s,ssl" % key)
+        if ssl_memcache:
+            timestamps['ssl_memcache'] = ssl_memcache.edit_info[0]
+
+    if len(timestamps) > 1:
+        for cache in timestamps.items():
+            if cache[1] < max(timestamps.values()):
+                if cache[0] is 'main_rcache':
+                    del page.request.req_cache['page_info'][(key, wiki_id)]
+                elif cache[0] is 'ssl_rcache':
+                    del page.request.req_cache['page_info'][(key+',ssl', wiki_id)]
+                elif cache[0] is 'main_memcache':
+                    page.request.mc.delete("page_info:%s" % key)
+                elif cache[0] is 'ssl_memcache':
+                    page.request.mc.delete("page_info:%s,ssl" % key)
+
 def pageInfo(page, get_from_cache=True, cached_content=None,
              cached_time=None):
     """
@@ -309,6 +357,7 @@ def pageInfo(page, get_from_cache=True, cached_content=None,
         key = pagename_key
 
     if get_from_cache:
+        validate_caches(page)
         # check for ssl vs. non-ssl version
         if page.request.isSSL():
             # check per-request cache
