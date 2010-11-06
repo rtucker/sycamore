@@ -884,7 +884,6 @@ def do_upload(pagename, request):
         for theme, charset, media, name in request.theme.stylesheets:
             if ('%s.css' % name).lower() == target.lower():
                 suspect_css = wikiutil.is_suspect_css(filecontent)
-                uploaded_file.seek(0)
                 if suspect_css:
                     error_msg(pagename, request,
                         _('File not saved because the CSS you uploaded has '
