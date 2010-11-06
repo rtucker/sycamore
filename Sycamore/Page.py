@@ -1013,9 +1013,19 @@ class Page(object):
             # performance on pages w/lots of links
             caching.getPageLinks(self.page_name, self.request,
                                  update=update_links)
+            # make sure internal URLs stay https:// if required
+            if request.isSSL():
+                self._realwrite = self.request.write
+                oldscheme = "http://" + config.wiki_base_domain
+                newscheme = "https://" + config.wiki_base_domain
+                request.write = lambda mystr: self._realwrite(
+                                    mystr.replace(oldscheme, newscheme))
+                request.write("<!-- SSL translation mode -->")
             # execute the python code we serialized,
             # this prints the page content and macros/etc
-            exec code
+            request.write("<!-- BEGIN CONTENT -->")
+            exec code in globals(), locals()
+            request.write("<!-- END CONTENT -->")
         # if something goes wrong, try without caching
         except 'CacheNeedsUpdate':
             body = self.get_raw_body()
