@@ -1385,7 +1385,14 @@ def send_title(request, text, **keywords):
     page = keywords.get('page', Page(pagename, request))
 
     # Print the HTML <head> element
-    user_head = [config.html_head] + request.html_head
+    user_head = [config.html_head]
+    user_head.append("<!-- end config.html_head -->")
+    user_head.append(
+        '<script src="%s%s/utils.js?tm=%s" type="text/javascript"'
+               ' charset="utf-8"></script>' %
+            (config.web_dir, config.url_prefix, request.theme.last_modified))
+    user_head += request.html_head
+    user_head.append("<!-- end request.html_head -->")
     
     # search engine precautions / optimization:
     # if it is an action or edit/search, send query headers (noindex,nofollow):
@@ -1446,11 +1453,6 @@ def send_title(request, text, **keywords):
         user_head.append(
             '<meta http-equiv="refresh" content="%(delay)d;URL=%(url)s">' %
             keywords['pi_refresh'])
-
-    user_head.append(
-        '<script src="%s%s/utils.js?tm=%s" type="text/javascript"'
-               ' charset="utf-8"></script>' %
-            (config.web_dir, config.url_prefix, request.theme.last_modified))
 
     # global javascript variable needed by edit.js
     if not page.prev_date and page.exists() and request.user.may.edit(page):
