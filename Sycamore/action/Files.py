@@ -206,10 +206,19 @@ def getAttachUrl(pagename, filename, request, addts=0, escaped=1, deleted=0,
     pagename = Page(pagename, request).proper_name()
     if not deleted:
         if not thumb:
-            url = "%s%s?sendfile=true%sfile=%s" % (base_url, 
-                wikiutil.quoteWikiname(pagename), amp,
-                urllib.quote(filename.encode(config.charset)).decode(
-                    config.charset))
+            if config.restful_urls and not do_download:
+                url = "%srestfile/%s/sendfile/" % (base_url,
+                    wikiutil.quoteWikiname(pagename))
+                if ts:
+                    url = "%s%s/" % (url, repr(ts))
+                url = "%s%s" % (url,
+                    urllib.quote(filename.encode(config.charset)).decode(
+                        config.charset))
+            else:
+                url = "%s%s?sendfile=true%sfile=%s" % (base_url, 
+                    wikiutil.quoteWikiname(pagename), amp,
+                    urllib.quote(filename.encode(config.charset)).decode(
+                        config.charset))
         else:
             if not size:
                 url = "%s%s?sendfile=true%sfile=%s%sthumb=yes" % (
@@ -245,7 +254,7 @@ def getAttachUrl(pagename, filename, request, addts=0, escaped=1, deleted=0,
                                amp, amp, repr(version)))
     if do_download:
         url = '%s%sdownload=true' % (url, amp)
-    if ts:
+    if ts and not config.restful_urls:
         url = '%s%sts=%s' % (url, amp, repr(ts))
     return url
 

@@ -300,6 +300,7 @@ _cfg_defaults_global = {
     'refresh': None, # (minimum_delay, type), e.g.: (2, 'internal')
     'relative_dir': 'index.cgi',
     'remote_search': False,
+    'restful_urls': False,
     'search_db_location': None,
     'shared_intermap': None, # can be string or list of strings (filenames)
     'show_hosts': 1,
