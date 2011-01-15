@@ -9,6 +9,8 @@
 
 # Imports
 import os
+import re
+import socket
 import time
 import urllib
 import string
@@ -126,7 +128,33 @@ class PageEditor(Page):
         # Is the IP address a Tor exit note?
         if config.block_tor_edits:
             tor = torcheck.torcheck()
-            if tor.query(self.request.remote_addr): _('You are not allowed to edit this page, %s.' % self.request.remote_addr)
+            if tor.query(self.request.remote_addr): msg = _('You are not allowed to edit this page, %s.' % self.request.remote_addr)
+
+        # Test against a number of DNSBLs
+        if config.block_dnsbl_edits:
+            # Test: is this an IP address?
+            re1='((?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(?![\\d])'
+            rg = re.compile(re1,re.IGNORECASE|re.DOTALL)
+            m = rg.search(self.request.remote_addr)
+            if m:
+                # this is an IP address
+                # reverse IP address octets
+                dq = self.request.remote_addr.split('.')
+                dq.reverse()
+                
+                for dnsbl in config.block_dnsbl_edits:
+                    querystring = '.'.join(dq)
+                    querystring += '.' + dnsbl + '.'
+
+                    try:
+                        result = socket.gethostbyname(querystring)
+                    except socket.gaierror:
+                        # probably nxdomain
+                        result = '0.0.0.0'
+
+                    if result.startswith('127.0.0'):
+                        # utoh
+                        msg = _('You are not allowed to edit this page: %s listed on %s' % (self.request.remote_addr, dnsbl))
 
         # Did one of the prechecks fail?
         if msg and not kw.get('had_conflict', None):
