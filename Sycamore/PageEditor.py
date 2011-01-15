@@ -123,10 +123,10 @@ class PageEditor(Page):
             # the web interface, but catch it just in case...
             msg = _('Cannot edit old revisions!')
 
-	# Is the IP address a Tor exit note?
-	if config.block_tor_edits:
-		tor = torcheck.torcheck()
-		if tor.query(self.request.remote_addr): _('You are not allowed to edit this page, %s.' % self.request.remote_addr)
+        # Is the IP address a Tor exit note?
+        if config.block_tor_edits:
+            tor = torcheck.torcheck()
+            if tor.query(self.request.remote_addr): _('You are not allowed to edit this page, %s.' % self.request.remote_addr)
 
         # Did one of the prechecks fail?
         if msg and not kw.get('had_conflict', None):
