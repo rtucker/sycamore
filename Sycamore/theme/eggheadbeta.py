@@ -635,15 +635,15 @@ class Theme(ThemeBase):
                 'var point_count=1;</script>' % dict)
         else:
             dict['map_html']  = ''
-        
+
+        dict['searchsuggest_html'] = ''
+        dict['searchsuggest_html'] += '<script type="text/javascript" src="/wiki/jquery.js"></script>'
+        dict['searchsuggest_html'] += '<script type="text/javascript" src="/wiki/jquery.qtip-1.0.0-rc3.min.js"></script>'
+
         if config.opensearch_suggest_url:
-            dict['searchsuggest_html'] = (
-                '<script type="text/javascript" src="/wiki/suggest/jquery.js"></script>'
-                '<script type="text/javascript" src="/wiki/suggest/dimensions.js"></script>'
-                '<script type="text/javascript" src="/wiki/suggest/autocomplete.js"></script>')
+            dict['searchsuggest_html'] += '<script type="text/javascript" src="/wiki/suggest/dimensions.js"></script>'
+            dict['searchsuggest_html'] += '<script type="text/javascript" src="/wiki/suggest/autocomplete.js"></script>'
             dict['stylesheets_html'] += '<link rel="stylesheet" type="text/css" charset="iso-8859-1" media="all" href="/wiki/suggest/autocomplete.css">\n'
-        else:
-            dict['searchsuggest_html'] = ''
 
         if dict['newtitle'] is self.request.config.catchphrase: 
             if self.request.config.catchphrase:

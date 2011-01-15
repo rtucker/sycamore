@@ -325,6 +325,7 @@ def execute(macro, args, formatter=None, **kw):
     request.write('<script type="text/javascript">'
                   'onLoadStuff.push(\'groupAllRcChanges();\');'
                   '</script>\n')
+    request.write('<script type="text/javascript" src="/wiki/revipbox.js"></script>\n')
 
     pagename = formatter.page.page_name
     q_pagename = wikiutil.quoteWikiname(pagename)
