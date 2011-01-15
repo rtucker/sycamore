@@ -31,17 +31,24 @@ $(document).ready(function()
             }
         })
     });
-    // Use the each() method to gain access to each elements attributes
-    $('#content div[class="rccomment"]').each(function()
+
+    // Recent changes page
+    $('#content span[class="rceditor"]').each(function()
     {
+        // nuke superfluous title overlays
+        $(this).removeAttr("title");
+        $(this).parent(".rccomment").removeAttr("title");
+        // grab the editor's name from the link within
+        var editor = $(this).contents().html();
+
         $(this).qtip(
         {
             content: {
                 text: '<center><img src="/wiki/throbber.gif" alt="Loading..." /></center>',
                 url: '/wiki/cgi/revipbox.py',
-                data: { ip: $(this).attr('title'), short: 1 },
+                data: { ip: $(this).attr('ip'), short: 1 },
                 title: {
-                    text: 'IP Information - ' + $(this).attr('title')
+                    text: 'Edited by ' + editor + ' from ' + $(this).attr('ip')
                 }
             },
             position: {

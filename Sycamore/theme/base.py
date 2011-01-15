@@ -631,9 +631,10 @@ class Theme(object):
                 com = ''
             else:
                 com = '(' + com + ')'
-            html.append(' by </span><span class="rceditor" title=%s>%s</span> '
-                        '<span class="rccomment">%s' %
-                        (d['editors'][0][1], d['editors'][0][0], com))
+            html.append(' by </span><span class="rceditor" title="%s" ip="%s">'
+                        '%s </span><span class="rccomment">%s' %
+                        (d['editors'][0][1], d['editors'][0][1],
+                         d['editors'][0][0], com))
         html.append('</span></span></div>\n')
 
         num = 0
@@ -643,8 +644,9 @@ class Theme(object):
                   if not com:
                     com = '(No comment)'
                   html.append('<div class="rccomment" title="%s">%s '
-                              '<span class="rceditor">%s</span></div>' %
-                              (ip, com, editor))
+                              '<span class="rceditor" ip="%s">%s'
+                              '</span></div>' %
+                              (ip, com, ip, editor))
                   num = num + 1
 
         html.append('</div>')
