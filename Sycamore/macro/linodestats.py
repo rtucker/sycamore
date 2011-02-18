@@ -32,8 +32,12 @@ def execute(macro, args, formatter=None):
         xmltree = mc.get(mc_key)
         status = 'cached'
         if not xmltree:
-            statsfd = urllib.urlopen(xmlurl)
-            xmltree = xml.dom.minidom.parseString(statsfd.read()).childNodes[0]
+            try:
+                statsfd = urllib.urlopen(xmlurl)
+                xmltree = xml.dom.minidom.parseString(statsfd.read()).childNodes[0]
+            except:
+                # it's missing
+                return formatter.rawHTML('<strong>VPS Stats</strong>: Unavailable (XML error)')
             status = 'fresh'
             mc.set(mc_key, xmltree, time=600)
 

@@ -162,7 +162,7 @@ def display_edits(request, userpage, on_pagename):
 
         pagename = edit[0]
         mtime = edit[1]
-        userIp = edit[2]
+        userIp = '<a href="http://revip.info/ipinfo/%s" tooltip="%s">%s</a>' % (edit[2], edit[2], edit[2])
         editType = edit[3]
         comment = edit[4]
         wiki_name = edit[5]
@@ -221,6 +221,7 @@ def display_edits(request, userpage, on_pagename):
         edit_table.render(append=printNextPrev(request, on_pagename, this_edit,
                                                offset_given))
         request.write('</div>')
+        request.write('<script type="text/javascript" src="/wiki/revipbox.js"></script>')
     else:
         request.write("<p>This user hasn't edited any pages.</p>")
 

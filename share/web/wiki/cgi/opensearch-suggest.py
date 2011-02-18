@@ -16,7 +16,7 @@
 # 2009/08/10: Cleaning up to make less rocwiki-specific before importing to git
 
 maxresults = 10
-memcachedtag = 'oss-024-'
+memcachedtag = 'oss-028-'
 
 # Imports
 import cgi
@@ -93,6 +93,7 @@ def xapianrunquery(cur, dbs, query, limit=maxresults):
 def pgrunquery(cur, query, limit=maxresults):
     # append % to the query
     query = query + '%'
+    wikicomm = 'wiki community/' + query.lower() + '%'
     cur.execute("""
         SELECT propercased_name,edittime
         FROM curpages
@@ -104,8 +105,10 @@ def pgrunquery(cur, query, limit=maxresults):
             )
             AS access
             ON (access.pagename = curpages.name)
-        WHERE name ilike %(query)s
-        AND (has_read_priv IS NULL OR has_read_priv)
+        WHERE (name ilike %(query)s OR name ilike %(wikicomm)s)
+              AND text not ilike '#redirect %%'
+              AND name not ilike '%/comments'
+              AND (has_read_priv IS NULL OR has_read_priv)
         ORDER BY propercased_name
     """, dict(query=query))
     return cur.fetchall()

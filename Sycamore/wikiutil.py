@@ -1154,7 +1154,7 @@ def attach_link_tag(request, params, text=None, formatter=None, **kw):
     if formatter:
         if kw.has_key('absolute'):
             return formatter.url("%s/%s" %
-                    (farm.getWikiURL(request.config.wiki_name, request),
+                    (request.getQualifiedURL(uri=request.getScriptname()),
                     params),
                 text, css_class, **kw)
         else:
@@ -1189,8 +1189,8 @@ def link_tag(request, params, text=None, formatter=None, **kw):
         text = params # default
     if formatter:
         if kw.get('absolute'):
-            return formatter.url("%s%s" %
-                    (farm.getWikiURL(request.config.wiki_name, request),
+            return formatter.url("%s/%s" %
+                    (request.getQualifiedURL(uri=request.getScriptname()),
                      params),
                 text, css_class, **kw)
         else:
@@ -1202,9 +1202,9 @@ def link_tag(request, params, text=None, formatter=None, **kw):
     if css_class:
         attrs.append(' class="%s"' % css_class)
     if kw.get('absolute'):
-        return ('<a%s href="%s%s">%s</a>' %
-                (''.join(attrs), farm.getWikiURL(request.config.wiki_name,
-                                                 request),
+        return ('<a%s href="%s/%s">%s</a>' %
+                (''.join(attrs),
+                 request.getQualifiedURL(uri=request.getScriptname()),
                  params, text))
     else:
         return ('<a%s href="%s/%s">%s</a>' % 
@@ -1385,7 +1385,14 @@ def send_title(request, text, **keywords):
     page = keywords.get('page', Page(pagename, request))
 
     # Print the HTML <head> element
-    user_head = [config.html_head] + request.html_head
+    user_head = [config.html_head]
+    user_head.append("<!-- end config.html_head -->")
+    user_head.append(
+        '<script src="%s%s/utils.js?tm=%s" type="text/javascript"'
+               ' charset="utf-8"></script>' %
+            (config.web_dir, config.url_prefix, request.theme.last_modified))
+    user_head += request.html_head
+    user_head.append("<!-- end request.html_head -->")
     
     # search engine precautions / optimization:
     # if it is an action or edit/search, send query headers (noindex,nofollow):
@@ -1466,11 +1473,6 @@ def send_title(request, text, **keywords):
 var curTimestamp = '%s'; var action = '%s'; var may_inline_edit = %s;
 var onLoadStuff = new Array();</script>""" % (config.url_prefix, time.time(),
                                               page.url(), may_inline_edit))
-    user_head.append(
-        '<script src="%s%s/utils.js?tm=%s" type="text/javascript"'
-               ' charset="utf-8"></script>' %
-            (config.web_dir, config.url_prefix, request.theme.last_modified))
-
     if keywords.has_key('strict_title') and keywords['strict_title']:
         strict_title = keywords['strict_title']
     else:
@@ -1512,7 +1514,6 @@ var onLoadStuff = new Array();</script>""" % (config.url_prefix, time.time(),
         "%s\n"
         "%s\n" %
         (
-        ''.join(user_head),
         keywords.get('html_head', ''),
         rss_html,
         request.theme.html_head({
@@ -1521,7 +1522,8 @@ var onLoadStuff = new Array();</script>""" % (config.url_prefix, time.time(),
                                request.config.sitename),
             'print_mode': keywords.get('print_mode', False),
             'page': page
-            })
+            }),
+        ''.join(user_head),
         ))
 
     request.write("</head>\n")
@@ -1598,8 +1600,7 @@ var onLoadStuff = new Array();</script>""" % (config.url_prefix, time.time(),
     }
 
     if request.isSSL():
-        d['script_name'] = request.getQualifiedURL(uri=d['script_name'],
-                                                   force_ssl_off=True)
+        d['script_name'] = request.getQualifiedURL(uri=d['script_name'])
     # add quoted versions of pagenames
     newdict = {}
     for key in d:
