@@ -88,11 +88,26 @@ def xapianrunquery(cur, dbs, query, limit=maxresults):
 
     return results
 
-# pgrunquery: run the query against the postgresql db
+# pgrunquery: run the query against the postgresql db, checking the access
+#             control lists to only display public pages.
 def pgrunquery(cur, query, limit=maxresults):
     # append % to the query
     query = query + '%'
-    cur.execute("SELECT propercased_name,edittime FROM curpages WHERE name like %(query)s", dict(query=query))
+    cur.execute("""
+        SELECT propercased_name,edittime
+        FROM curpages
+            LEFT JOIN
+            (
+                SELECT pagename, may_read AS has_read_priv
+                FROM pageacls
+                WHERE groupname IN ('All')
+            )
+            AS access
+            ON (access.pagename = curpages.name)
+        WHERE name ilike %(query)s
+        AND (has_read_priv IS NULL OR has_read_priv)
+        ORDER BY propercased_name
+    """, dict(query=query))
     return cur.fetchall()
 
 # dipdatabase: gets propercased_name and edittime
