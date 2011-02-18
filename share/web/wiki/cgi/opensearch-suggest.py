@@ -91,8 +91,9 @@ def xapianrunquery(cur, dbs, query, limit=maxresults):
 # pgrunquery: run the query against the postgresql db, checking the access
 #             control lists to only display public pages.
 def pgrunquery(cur, query, limit=maxresults):
-    # append % to the query
-    query = query + '%'
+    # append % to the query -- we have to do this here, because we use
+    # query parameters in the query
+    query = query.lower() + '%'
     wikicomm = 'wiki community/' + query.lower() + '%'
     cur.execute("""
         SELECT propercased_name,edittime
@@ -105,12 +106,12 @@ def pgrunquery(cur, query, limit=maxresults):
             )
             AS access
             ON (access.pagename = curpages.name)
-        WHERE (name ilike %(query)s OR name ilike %(wikicomm)s)
+        WHERE (name like %(query)s OR name like %(wikicomm)s)
               AND text not ilike '#redirect %%'
-              AND name not ilike '%%/comments'
+              AND name not like '%%/comments'
               AND (has_read_priv IS NULL OR has_read_priv)
         ORDER BY propercased_name
-    """, dict(query=query))
+    """, dict(query=query, wikicomm=wikicomm))
     return cur.fetchall()
 
 # dipdatabase: gets propercased_name and edittime
