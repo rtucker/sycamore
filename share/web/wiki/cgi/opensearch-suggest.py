@@ -107,7 +107,7 @@ def pgrunquery(cur, query, limit=maxresults):
             ON (access.pagename = curpages.name)
         WHERE (name ilike %(query)s OR name ilike %(wikicomm)s)
               AND text not ilike '#redirect %%'
-              AND name not ilike '%/comments'
+              AND name not ilike '%%/comments'
               AND (has_read_priv IS NULL OR has_read_priv)
         ORDER BY propercased_name
     """, dict(query=query))
