@@ -14,6 +14,7 @@ from Sycamore.support import memcache
 from Sycamore import config
 
 def execute(macro, args, formatter=None):
+    stats = {}
     if not formatter:
         formatter = macro.formatter
 
@@ -30,7 +31,6 @@ def execute(macro, args, formatter=None):
             return formatter.rawHTML('<strong>VPS Stats</strong>: Unavailable (set linode_username in config)')
 
         xmltree = mc.get(mc_key)
-        status = 'cached'
         if not xmltree:
             try:
                 statsfd = urllib.urlopen(xmlurl)
@@ -38,20 +38,42 @@ def execute(macro, args, formatter=None):
             except:
                 # it's missing
                 return formatter.rawHTML('<strong>VPS Stats</strong>: Unavailable (XML error)')
-            status = 'fresh'
             mc.set(mc_key, xmltree, time=600)
 
         # messy XML parsing action
-        hostname = xmltree.getElementsByTagName('host')[0].getElementsByTagName('host')[0].childNodes[0].wholeText
-        hostload = xmltree.getElementsByTagName('host')[0].getElementsByTagName('hostLoad')[0].childNodes[0].wholeText
-        upsince = xmltree.getElementsByTagName('upSince')[0].childNodes[0].wholeText
-        cpuconsumption = float(xmltree.getElementsByTagName('cpuConsumption')[0].childNodes[0].wholeText)
-        totalbytes = int(xmltree.getElementsByTagName('bwdata')[0].getElementsByTagName('total_bytes')[0].childNodes[0].wholeText)
-        timestamp = xmltree.getElementsByTagName('request')[0].getElementsByTagName('DateTimeStamp')[0].childNodes[0].wholeText
-
+        host = xmltree.getElementsByTagName('host')[0]
+        upsince = xmltree.getElementsByTagName('upSince')[0]
+        bwdata = xmltree.getElementsByTagName('bwdata')[0]
+        request = xmltree.getElementsByTagName('request')[0]
+        stats['host'] = host.getElementsByTagName('host')[0].childNodes[0].wholeText
+        stats['pendingJobs'] = int(host.getElementsByTagName('pendingJobs')[0].childNodes[0].wholeText)
+        if stats['pendingJobs'] == 1:
+            stats['pJs'] = ''
+        else:
+            stats['pJs'] = 's'
+        stats['upSince'] = upsince.childNodes[0].wholeText
+        stats['total_bytes'] = int(bwdata.getElementsByTagName('total_bytes')[0].childNodes[0].wholeText)
+        stats['total_gb'] = float(stats['total_bytes'])/1024/1024/1024
+        stats['max_avail'] = int(bwdata.getElementsByTagName('max_avail')[0].childNodes[0].wholeText)
+        stats['rx_bytes'] = int(bwdata.getElementsByTagName('rx_bytes')[0].childNodes[0].wholeText)
+        stats['tx_bytes'] = int(bwdata.getElementsByTagName('tx_bytes')[0].childNodes[0].wholeText)
+        stats['tx_perc'] = float(stats['tx_bytes'])/float(stats['total_bytes'])*100
+        stats['rx_perc'] = float(stats['rx_bytes'])/float(stats['total_bytes'])*100
+        stats['bw_perc'] = float(stats['total_bytes'])/float(stats['max_avail'])*100
+        stats['DateTimeStamp'] = request.getElementsByTagName('DateTimeStamp')[0].childNodes[0].wholeText
         loadavg = string.split(open('/proc/loadavg', 'r').readline())
+        stats['loadavg'] = '%s %s %s' % (loadavg[0], loadavg[1], loadavg[2])
 
-        return formatter.rawHTML('<strong>VPS Stats</strong>: Host %s is <strong>%s</strong>.  Guest has been up since %s, and is averaging <strong>%2.2f</strong>%% of one host CPU.  Used <strong>%i GB</strong>.  Load averages are <strong>%s %s %s</strong>.  Host time is %s (%s).' % (hostname, hostload, upsince, cpuconsumption, totalbytes/1024/1024/1024, loadavg[0], loadavg[1], loadavg[2], timestamp, status))
+        return formatter.rawHTML("""
+          <strong>VPS Stats</strong>:<br>&nbsp;&nbsp;&nbsp;&nbsp;
+          At %(DateTimeStamp)s, host %(host)s has
+          <strong>%(pendingJobs)i</strong> pending job%(pJs)s.  This instance
+          has been running since %(upSince)s, with load averages
+          <strong>%(loadavg)s</strong>.  This month's bandwidth consumption
+          has been <strong>%(total_gb)2.2f GB</strong>, or %(bw_perc)2.2f%%
+          of the monthly quota.  Outbound data has accounted for
+          <strong>%(tx_perc)2.2f%%</strong> of that total.
+        """ % stats)
 
     except IOError:
         return formatter.rawHTML('<strong>VPS Stats</strong>: Unavailable.')
