@@ -123,9 +123,9 @@ def page_iterator(fd):
         raise ValueError("This does not appear to be a MediaWiki-style XML dump: %s" % root.tag)
 
     for page in root.getiterator(tag='%spage' % namespace):
-        page_title = page.find('%stitle' % namespace).text
+        page_title = page.find('%stitle' % namespace).text.encode("ascii", "xmlcharrefreplace")
         page_timestamp = dateutil.parser.parse('1970-01-01T00:00:00Z')
-        page_url = urllib.basejoin(sitebase, urllib.quote(page_title.replace(' ', '_')))
+        page_url = urllib.basejoin(sitebase, urllib.quote(page_title.replace(' ', '_')).decode('utf-8'))
         text = None
         for revision in page.getiterator(tag='%srevision' % namespace):
             rev_timestamp = revision.find('%stimestamp' % namespace).text
@@ -186,44 +186,41 @@ def do_it():
         for url, linktext in link_plucker(text):
             urlmethod, urltmp = urllib.splittype(url)
             urlhost = urllib.splithost(urltmp)[0]
-            if urlhost not in ROBOTMEMORY and urlhost not in options.skip:
-                sys.stderr.write("Checking robots.txt for %s\n" % urlhost)
+
+            if urlhost in options.skip:
+                if DEBUG: sys.stderr.write("Skipping %s due to options.skip\n" % url)
+                continue
+
+            if urlhost not in ROBOTMEMORY:
+                sys.stderr.write("Pulling robots.txt for %s\n" % urlhost)
                 rp = robotparser.RobotFileParser()
                 roboturl = urllib.basejoin('%s://%s' % (urlmethod, urlhost), 'robots.txt')
+                rp.set_url(roboturl)
                 try:
-                    body, headers = get_url(roboturl, referer=page_url)
-                    http, status = headers.readline().split(' ', 1)
-                    if not status.startswith('200'):
-                        # No robots.txt found, assuming OK
-                        if DEBUG: sys.stderr.write("robots.txt couldn't be fetched: %s\n" % status)
-                        ROBOTMEMORY[urlhost] = True
-                    else:
-                        rp.parse(body.readlines())
-                        ROBOTMEMORY[urlhost] = rp.can_fetch(USERAGENT, url)
-                except pycurl.error as err:
-                    if DEBUG: sys.stderr.write("robots.txt couldn't be fetched: %s\n" % err)
-                    ROBOTMEMORY[urlhost] = True
-            if urlhost in ROBOTMEMORY and ROBOTMEMORY[urlhost] and urlhost not in options.skip:
+                    rp.read()
+                    ROBOTMEMORY[urlhost] = rp
+                except:
+                    if DEBUG: sys.stderr.write("Could not pull %s, continuing...\n" % roboturl)
+                    continue
+
+            if ROBOTMEMORY[urlhost].can_fetch(USERAGENT, url):
                 if urlhost in HITMEMORY:
-                    if DEBUG: sys.stderr.write("Recently-hit host, waiting if needed")
                     while HITMEMORY[urlhost] > (datetime.datetime.now() - datetime.timedelta(seconds=10)):
-                        time.sleep(1)
-                        if DEBUG: sys.stderr.write(".")
-                    if DEBUG: sys.stderr.write("\n")
+                        if DEBUG: sys.stderr.write("Recently hit %s, waiting\n" % urlhost)
+                        time.sleep(2)
                 if DEBUG: sys.stderr.write("Pulling %s\n" % url)
                 ok, status = is_url_valid(url, referer=page_url)
                 HITMEMORY[urlhost] = datetime.datetime.now()
-            elif urlhost not in options.skip:
+            else:
+                if DEBUG: sys.stderr.write("Not allowed to fetch %s by robots.txt\n" % url)
                 ok = False
                 status = 'Denied by robots.txt'
-            else:
-                ok = True
-                status = 'skipped'
+
             if not ok:
                 if page_ok:
                     print(u" * [\"%s\"]" % title)
                     page_ok = False
-                print(u"  * %s: [%s %s] (%s)" % (status.strip(), url, linktext, url))
+                print(u"  * %s: [%s %s] (%s)" % (status.strip(), url, linktext.encode('ascii', 'xmlcharrefreplace'), url))
             if DEBUG: sys.stderr.write("Result: %s, status %s\n" % (ok, status.strip()))
 
     print("")
