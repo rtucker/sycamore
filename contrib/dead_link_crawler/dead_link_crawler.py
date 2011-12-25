@@ -72,26 +72,14 @@ def parse_options():
 def do_it():
     print("%s: Start" % datetime.datetime.now())
     options, xmlfile = parse_options()
-    chords = 0
-    last_print = time.time()
 
-    # Iterate through all of the pages in xmlfile
-    for pageinfo in parse_pages.delay(xmlfile).get():
-        # First, we extract all of the links from the page
-        header = build_tasklist_for_page.delay(pageinfo).get()
-        # After we check all of the links, we produce output
-        callback_inner = write_string_to_file.subtask(args=(pageinfo['title'],))
-        callback = create_table_for_page.subtask(args=(pageinfo,), kwargs={'callback': callback_inner})
+    print("%s: Starting parse_pages." % datetime.datetime.now())
+    result = parse_pages.delay(xmlfile,
+                    callback=build_chord_for_page.subtask())
+    print("%s: Waiting for parse_pages task to finish." %
+                    datetime.datetime.now())
+    result.wait()
 
-        if len(header) > 0:
-            # Only bother doing this if there are links on the page.
-            c = chord(header, interval=120)(callback)
-            chords += 1
-            if time.time() - last_print > 60:
-                print("%s: Built %i chords, last page: %s" % (datetime.datetime.now(), chords, pageinfo['title']))
-                last_print = time.time()
-
-    print("%s: Finished building %i chords" % (datetime.datetime.now(), chords,))
     print("%s: End" % datetime.datetime.now())
 
 if __name__ == '__main__':
