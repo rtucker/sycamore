@@ -311,9 +311,9 @@ class RequestBase(object):
         """
         self.http_accept_language = env.get('HTTP_ACCEPT_LANGUAGE', 'en')
         self.http_accept_encoding = env.get('HTTP_ACCEPT_ENCODING', '')
-        self.server_name = env.get('SERVER_NAME', 'localhost')
+        self.server_name = env.get('SERVER_NAME', 'localhost').strip('.')
         self.server_port = env.get('SERVER_PORT', '80')
-        self.http_host = env.get('HTTP_HOST','localhost')
+        self.http_host = env.get('HTTP_HOST','localhost').strip('.')
         self.http_referer = env.get('HTTP_REFERER', '')
         self.saved_cookie = env.get('HTTP_COOKIE', '')
         self.script_name = env.get('SCRIPT_NAME', '')
