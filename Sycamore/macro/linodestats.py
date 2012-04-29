@@ -7,11 +7,23 @@
 Dependencies = ["time"]
 
 import string
-import urllib
+import urllib2
 import xml.dom.minidom
 
 from Sycamore.support import memcache
 from Sycamore import config
+
+# The undocumented stats API doesn't work with IPv6 yet, so we'll kinda
+# do this crazy thing.
+# http://stackoverflow.com/questions/2014534/force-python-mechanize-urllib2-to-only-use-a-requests
+import socket
+origGetAddrInfo = socket.getaddrinfo
+
+def getAddrInfoWrapper(host, port, family=0, socktype=0, proto=0, flags=0):
+    return origGetAddrInfo(host, port, socket.AF_INET, socktype, proto, flags)
+
+socket.getaddrinfo = getAddrInfoWrapper
+# End crazy thing
 
 def execute(macro, args, formatter=None):
     stats = {}
@@ -33,7 +45,7 @@ def execute(macro, args, formatter=None):
         xmltree = mc.get(mc_key)
         if not xmltree:
             try:
-                statsfd = urllib.urlopen(xmlurl)
+                statsfd = urllib2.urlopen(xmlurl)
                 xmltree = xml.dom.minidom.parseString(statsfd.read()).childNodes[0]
                 # make sure we have useful stuff here
                 host = xmltree.getElementsByTagName('host')[0]
@@ -47,6 +59,7 @@ def execute(macro, args, formatter=None):
             upsince = xmltree.getElementsByTagName('upSince')[0]
             bwdata = xmltree.getElementsByTagName('bwdata')[0]
             request = xmltree.getElementsByTagName('request')[0]
+            host = xmltree.getElementsByTagName('host')[0]
             stats['host'] = host.getElementsByTagName('host')[0].childNodes[0].wholeText
             stats['pendingJobs'] = int(host.getElementsByTagName('pendingJobs')[0].childNodes[0].wholeText)
             if stats['pendingJobs'] == 1:
@@ -65,8 +78,8 @@ def execute(macro, args, formatter=None):
             stats['DateTimeStamp'] = request.getElementsByTagName('DateTimeStamp')[0].childNodes[0].wholeText
             loadavg = string.split(open('/proc/loadavg', 'r').readline())
             stats['loadavg'] = '%s %s %s' % (loadavg[0], loadavg[1], loadavg[2])
-        except:
-            return formatter.rawHTML('<strong>VPS Stats</strong>: Unavailable (XML element parsing error)')
+        except Exception, e:
+            return formatter.rawHTML('<strong>VPS Stats</strong>: Unavailable (XML element parsing error) <!-- %s -->' % e)
 
         return formatter.rawHTML("""
           <strong>VPS Stats</strong>:<br>&nbsp;&nbsp;&nbsp;&nbsp;
