@@ -15,6 +15,7 @@ import Cookie
 import hashlib
 import locale
 import pickle
+import random
 import urllib
 import xml.dom.minidom
 from copy import copy
@@ -206,11 +207,71 @@ def encodePassword(pwd):
 
 def hash(cleartext):
     """
-    SHA hash of cleartext returned
+    Base64 SHA hash of cleartext returned.
     """
     import base64
     return base64.encodestring(hashlib.new('sha1', cleartext.encode('utf-8')
                                ).digest()).rstrip()
+
+def get_hexdigest(algorithm, salt, raw_password):
+    """
+    Returns a string of the hexdigest of the given plaintext password and salt
+    using the given algorithm ('md5', 'sha1' or 'crypt').
+
+    Borrowed from Django 1.3's contrib/auth/models.py.
+    """
+    raw_password, salt = raw_password.encode('utf-8'), salt.encode('utf-8')
+    if algorithm == 'crypt':
+        try:
+            import crypt
+        except ImportError:
+            raise ValueError('"crypt" password algorithm not supported in this environment')
+        return crypt.crypt(raw_password, salt)
+
+    if algorithm == 'md5':
+        return hashlib.md5(salt + raw_password).hexdigest()
+    elif algorithm == 'sha1':
+        return hashlib.sha1(salt + raw_password).hexdigest()
+    raise ValueError("Got unknown password algorithm type in password.")
+
+def generate_hash(cleartext, algo='sha1', salt=None):
+    """
+    Given a cleartext password, returns a salted and hashed result.
+    If no salt is specified, a random one is chosen.
+
+    Based largely on Django's approach.
+    """
+    if not salt:
+        salt = get_hexdigest(algo, str(random.random()), str(random.random()))[:5]
+    hsh = get_hexdigest(algo, salt, cleartext)
+    return '%s$%s$%s' % (algo, salt, hsh)
+
+def constant_time_compare(val1, val2):
+    """
+    Returns True if the two strings are equal, False otherwise.
+
+    The time taken is independent of the number of characters that match.
+
+    Borrowed from Django 1.3's utils/crypto.py
+    """
+    if len(val1) != len(val2):
+        return False
+    result = 0
+    for x, y in zip(val1, val2):
+        result |= ord(x) ^ ord(y)
+    return result == 0
+
+def check_password(cleartext, encoded):
+    """
+    Returns True if the cleartext matches the hash, False otherwise
+    """
+    if encoded.find('$') > -1:
+        # New format password
+        algo, salt, hsh = encoded.split('$')
+        return constant_time_compare(hsh, get_hexdigest(algo, salt, cleartext))
+    else:
+        # Old format password
+        return constant_time_compare(encoded, encodePassword(cleartext))
 
 #############################################################################
 ### User
@@ -254,7 +315,7 @@ class User(object):
         if not password:
             self.enc_password = ""
         else:
-            self.enc_password = encodePassword(password)
+            self.enc_password = generate_hash(password)
         self.trusted = 0
         self.email = ""
         self.edit_rows = config.edit_rows
@@ -381,11 +442,12 @@ class User(object):
 
         if self.id:
             self.load_from_id(check_pass=(is_login and not
-                                          logged_in_via_cookie))
+                                          logged_in_via_cookie),
+                              password=password)
             if self.name == self.auth_username:
                 self.trusted = 1
         elif self.name:
-            self.load(check_pass=is_login)
+            self.load(check_pass=is_login, password=password)
 
         # we want them to be able to sign back in right after they
         # click the 'logout' GET link, hence this test
@@ -491,7 +553,7 @@ class User(object):
             return True
         return False
 
-    def load(self, check_pass=True):
+    def load(self, check_pass=True, password=None):
         """
         Lookup user ID by user name and load user account.
 
@@ -500,9 +562,9 @@ class User(object):
         """
         self.id = getUserId(self.name, self.request)
         if self.id:
-            self.load_from_id(check_pass=check_pass)
+            self.load_from_id(check_pass=check_pass, password=password)
         
-    def load_from_id(self, check_pass=0):
+    def load_from_id(self, check_pass=0, password=None):
         """
         Load user account data from disk.
 
@@ -512,7 +574,12 @@ class User(object):
         those starting with an underscore.
         
         @param check_pass: If 1, then self.enc_password must match the
-                           password in the user account file.
+                           password in the user account file, OR the
+                           cleartext password passed next must match
+                           the salted/hashed password in the user account
+                           file.
+        @param password:   Cleartext user password, used for comparison
+                           with salted/hashed database value.
         """
         if not self.exists():
             return
@@ -560,15 +627,25 @@ class User(object):
 
             self.request.req_cache['users'][self.id] = user_data
 
-        if check_pass:
+        if check_pass and password:
             # If we have no password set, we don't accept login with username
             if not user_data['enc_password']:
                 return
+
             # Check for a valid password
-            elif user_data['enc_password'] != self.enc_password:
-                return
-            else:
+            if check_password(password, user_data['enc_password']):
                 self.trusted = 1
+                self.enc_password = user_data['enc_password']
+            else:
+                return
+
+            # If the database password is old-school, update it
+            if user_data['enc_password'].find('$') < 0:
+                self.enc_password = generate_hash(password)
+                self.save()
+        elif check_pass:
+            # Bugger
+            return
 
         # Copy user data into user object
         for key, val in user_data.items():

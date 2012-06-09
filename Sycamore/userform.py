@@ -480,7 +480,7 @@ class UserSettingsHandler(object):
                 if not password and new_user:
                     raise BadData, (_("Please specify a password!"), new_user)
                 if password:
-                    theuser.enc_password = user.encodePassword(password)
+                    theuser.enc_password = user.generate_hash(password)
 
                 self._clear_all_sessions_except_current()
 
@@ -603,7 +603,7 @@ class UserSettingsHandler(object):
                 if not password and new_user:
                     raise BadData, (_("Please specify a password!"), new_user)
                 if password:
-                    theuser.enc_password = user.encodePassword(password)
+                    theuser.enc_password = user.generate_hash(password)
 
                 theuser.anonymous = False
 
